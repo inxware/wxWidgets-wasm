@@ -1,0 +1,19 @@
+TOOLS_ROOT=../../build/wasm
+
+include $(TOOLS_ROOT)/common.mk
+include $(TOOLS_ROOT)/wxwasm.mk
+
+TARGET=life
+
+SOURCES=dialogs.cpp game.cpp life.cpp reader.cpp
+
+EXTRA_INC_PATHS=-I.
+CXXFLAGS=$(WX_CXXFLAGS)
+
+LIBS=
+LDFLAGS=-s TOTAL_MEMORY=32MB -s USE_PTHREADS=1 $(WX_LDFLAGS)
+
+JS=$(TOOLS_ROOT)/wx.js
+HTML=$(TOOLS_ROOT)/template.html
+
+$(eval $(call TARGET_RULE,$(TARGET),$(SOURCES),$(LIBS),$(LDFLAGS),$(JS),$(HTML)))

@@ -1,0 +1,19 @@
+TOOLS_ROOT=../../build/wasm
+
+include $(TOOLS_ROOT)/common.mk
+include $(TOOLS_ROOT)/wxwasm.mk
+
+TARGET=forty
+
+SOURCES=canvas.cpp card.cpp forty.cpp game.cpp pile.cpp playerdg.cpp scoredg.cpp scorefil.cpp
+
+EXTRA_INC_PATHS=-I.
+CXXFLAGS=$(WX_CXXFLAGS)
+
+LIBS=
+LDFLAGS=-s TOTAL_MEMORY=32MB $(WX_LDFLAGS) -s EXPORTED_FUNCTIONS='["_main", "_ProcessEvents"]' 
+
+JS=$(TOOLS_ROOT)/wx.js
+HTML=$(TOOLS_ROOT)/template.html
+
+$(eval $(call TARGET_RULE,$(TARGET),$(SOURCES),$(LIBS),$(LDFLAGS),$(JS),$(HTML)))

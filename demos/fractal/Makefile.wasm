@@ -1,0 +1,19 @@
+TOOLS_ROOT=../../build/wasm
+
+include $(TOOLS_ROOT)/common.mk
+include $(TOOLS_ROOT)/wxwasm.mk
+
+TARGET=fractal
+
+SOURCES=fractal.cpp
+
+EXTRA_INC_PATHS=-I.
+CXXFLAGS=$(WX_CXXFLAGS)
+
+LIBS=
+LDFLAGS=-s TOTAL_MEMORY=32MB $(WX_LDFLAGS)
+
+JS=$(TOOLS_ROOT)/wx.js
+HTML=$(TOOLS_ROOT)/template.html
+
+$(eval $(call TARGET_RULE,$(TARGET),$(SOURCES),$(LIBS),$(LDFLAGS),$(JS),$(HTML)))

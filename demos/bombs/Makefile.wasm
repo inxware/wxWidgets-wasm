@@ -1,0 +1,19 @@
+TOOLS_ROOT=../../build/wasm
+
+include $(TOOLS_ROOT)/common.mk
+include $(TOOLS_ROOT)/wxwasm.mk
+
+TARGET=bombs
+
+SOURCES=bombs.cpp bombs1.cpp game.cpp
+
+EXTRA_INC_PATHS=-I.
+CXXFLAGS=$(WX_CXXFLAGS) -g
+
+LIBS=
+LDFLAGS=-s TOTAL_MEMORY=32MB $(WX_LDFLAGS) -g
+
+JS=$(TOOLS_ROOT)/wx.js
+HTML=$(TOOLS_ROOT)/template.html
+
+$(eval $(call TARGET_RULE,$(TARGET),$(SOURCES),$(LIBS),$(LDFLAGS),$(JS),$(HTML)))
