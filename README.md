@@ -32,10 +32,13 @@ Building
 --------
 
 git submodule update --init src/jpeg
+
 git submodule update --init 3rdparty/catch
 
 export CFLAGS=-I$EMSCRIPTEN/system/local/include
+
 export CXXFLAGS=-I$EMSCRIPTEN/system/local/include
+
 export LDFLAGS=-L$EMSCRIPTEN/system/local/lib -sERROR_ON_UNDEFINED_SYMBOLS=0
 
 export CONFIGURE_ARGS="
@@ -50,6 +53,7 @@ export CONFIGURE_ARGS="
   --disable-xlocale"
 
 $EMSCRIPTEN/emconfigure $SOURCE_DIR/configure $CONFIGURE_ARGS
+
 $EMSCRIPTEN/emmake make
 
 
