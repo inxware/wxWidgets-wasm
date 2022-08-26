@@ -336,6 +336,7 @@ void wxGenericFileDialog::OnOk( wxCommandEvent &WXUNUSED(event) )
     if ( HasFdFlag(wxFD_SAVE) && HasFdFlag(wxFD_OVERWRITE_PROMPT) &&
                 wxFileExists(path) )
     {
+/*
         if ( wxMessageBox
              (
                 wxString::Format
@@ -347,6 +348,7 @@ void wxGenericFileDialog::OnOk( wxCommandEvent &WXUNUSED(event) )
                 wxYES_NO
              ) != wxYES)
             return;
+*/
     }
     else if ( HasFdFlag(wxFD_OPEN) && HasFdFlag(wxFD_FILE_MUST_EXIST) &&
                     !wxFileExists(path) )

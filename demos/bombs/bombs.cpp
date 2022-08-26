@@ -113,6 +113,7 @@ void BombsFrame::NewGame(int level, bool query)
 {
     if(query)
     {
+/*
        int ok = wxMessageBox(
                   wxT("Start new game regardless previous board?"),
                   wxT("Confirm"),
@@ -120,6 +121,7 @@ void BombsFrame::NewGame(int level, bool query)
                   this
                 );
        if(ok!=wxYES)return;
+*/
     }
 
     int numHorzCells = 20, numVertCells = 20;
@@ -189,6 +191,7 @@ void BombsFrame::OnEasyCorner(wxCommandEvent& WXUNUSED(event))
 
     msg = wxT("Do you really want to ") + msg + wxT(" having\ntop left corner always empty for easier start?");
 
+/*
     int ok = wxMessageBox(
                msg,
                wxT("Confirm"),
@@ -197,6 +200,7 @@ void BombsFrame::OnEasyCorner(wxCommandEvent& WXUNUSED(event))
              );
 
     if(ok!=wxYES)return;
+*/
 
     m_easyCorner = !m_easyCorner;
 
@@ -225,8 +229,8 @@ BombsCanvas::BombsCanvas(wxFrame *parent, BombsGame *game)
 
     dc.SetMapMode(wxMM_METRIC);
 
-    int xcm = dc.LogicalToDeviceX(10);
-    int ycm = dc.LogicalToDeviceY(10);
+    int xcm = dc.LogicalToDeviceXRel(10);
+    int ycm = dc.LogicalToDeviceYRel(10);
     // To have a square cell, there must be :
     //    sx*ycm == sy*xcm
     if (chw*ycm < chh*xcm)

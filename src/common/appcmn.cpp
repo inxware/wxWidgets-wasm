@@ -330,6 +330,7 @@ bool wxAppBase::OnInitGui()
 
 int wxAppBase::OnRun()
 {
+    printf("Running app\n");
     // see the comment in ctor: if the initial value hasn't been changed, use
     // the default Yes from now on
     if ( m_exitOnFrameDelete == Later )

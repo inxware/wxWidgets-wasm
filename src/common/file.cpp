@@ -563,7 +563,7 @@ bool wxTempFile::Open(const wxString& strName)
         return false;
     }
 
-#ifdef __UNIX__
+#if defined(__UNIX__) && !defined(__WXWASM__)
     // the temp file should have the same permissions as the original one
     mode_t mode;
 

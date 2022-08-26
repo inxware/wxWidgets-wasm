@@ -46,8 +46,8 @@ public:
     virtual void Click() wxOVERRIDE;
 
     // Get/set the value
-    void SetValue(bool state);
-    bool GetValue() const { return m_value; }
+    void SetValue(bool state) wxOVERRIDE;
+    bool GetValue() const wxOVERRIDE { return m_value; }
 
 protected:
     virtual wxBorder GetDefaultBorder() const wxOVERRIDE { return wxBORDER_NONE; }

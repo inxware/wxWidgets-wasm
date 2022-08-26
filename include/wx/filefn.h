@@ -643,7 +643,7 @@ WXDLLIMPEXP_BASE int wxParseCommonDialogsFilter(const wxString& wildCard, wxArra
 // classes
 // ----------------------------------------------------------------------------
 
-#ifdef __UNIX__
+#if defined(__UNIX__) && !defined(__WXWASM__)
 
 // set umask to the given value in ctor and reset it to the old one in dtor
 class WXDLLIMPEXP_BASE wxUmaskChanger

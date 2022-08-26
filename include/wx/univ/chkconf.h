@@ -106,6 +106,14 @@
 #   endif
 #endif /* wxUSE_THEME_MONO */
 
+#ifndef wxUSE_THEME_WASM
+#   ifdef wxABORT_ON_CONFIG_ERROR
+#       error "wxUSE_THEME_WASM must be defined"
+#   else
+#       define wxUSE_THEME_WASM 1
+#   endif
+#endif /* wxUSE_THEME_WASM */
+
 #ifndef wxUSE_THEME_WIN32
 #   ifdef wxABORT_ON_CONFIG_ERROR
 #       error "wxUSE_THEME_WIN32 must be defined"

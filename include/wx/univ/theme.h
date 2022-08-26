@@ -170,6 +170,8 @@ struct WXDLLIMPEXP_CORE wxThemeInfo
     #define wxUSE_THEME_MONO   1
     #undef  wxUSE_THEME_METAL
     #define wxUSE_THEME_METAL  1
+    #undef  wxUSE_THEME_WASM
+    #define wxUSE_THEME_WASM   1
 #endif // wxUSE_ALL_THEMES
 
 // determine the default theme to use:
@@ -179,6 +181,8 @@ struct WXDLLIMPEXP_CORE wxThemeInfo
     // use mono theme for DirectFB port because it cannot correctly
     // render neither win32 nor gtk themes yet:
     #define wxUNIV_DEFAULT_THEME mono
+#elif defined(__WXWASM__) && wxUSE_THEME_WASM
+    #define wxUNIV_DEFAULT_THEME wasm
 #endif
 
 // if no theme was picked, get any theme compiled in (sorted by
@@ -190,6 +194,8 @@ struct WXDLLIMPEXP_CORE wxThemeInfo
         #define wxUNIV_DEFAULT_THEME win32
     #elif wxUSE_THEME_MONO
         #define wxUNIV_DEFAULT_THEME mono
+    #elif wxUSE_THEME_WASM
+        #define wxUNIV_DEFAULT_THEME wasm
     #endif
     // If nothing matches, no themes are compiled and the app must provide
     // some theme itself

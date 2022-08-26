@@ -890,7 +890,7 @@ protected:
     // get the colour to be used for drawing the rules
     wxColour GetRuleColour() const
     {
-        return wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT);
+        return wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
     }
 
 private:

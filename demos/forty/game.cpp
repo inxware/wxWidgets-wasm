@@ -193,17 +193,21 @@ void Game::DoMove(wxDC& dc, Pile* src, Pile* dest)
         // Redraw the score box to update games won
         DisplayScore(dc);
 
+/*
         if (wxMessageBox(wxT("Do you wish to play again?"),
             wxT("Well Done, You have won!"), wxYES_NO | wxICON_QUESTION) == wxYES)
+*/
         {
             Deal();
             canvas->Refresh();
         }
+/*
         else
         {
             // user cancelled the dialog - exit the app
             ((wxFrame*)canvas->GetParent())->Close(true);
         }
+*/
     }
 }
 

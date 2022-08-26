@@ -72,6 +72,10 @@
     #include <CoreFoundation/CFString.h>
 #endif
 
+#if defined(__WXWASM__)
+    #include "emscripten.h"
+#endif
+
 // ----------------------------------------------------------------------------
 // constants
 // ----------------------------------------------------------------------------
@@ -648,6 +652,16 @@ inline bool wxGetNonEmptyEnvVar(const wxString& name, wxString* value)
     langFull = str.AsString()+"_";
     str.reset(wxCFRetain((CFStringRef)CFLocaleGetValue(userLocaleRef, kCFLocaleCountryCode)));
     langFull += str.AsString();
+#elif defined(__WXWASM__)
+    const int langBufferSize = 16;
+    char langBuffer[langBufferSize];
+
+    EM_ASM({
+        stringToUTF8(navigator.language, $0, $1);
+    }, langBuffer, langBufferSize);
+
+    langFull = wxString::FromUTF8(langBuffer);
+    langFull.Replace("-", "_");
 #else
     if (!wxGetNonEmptyEnvVar(wxS("LC_ALL"), &langFull) &&
         !wxGetNonEmptyEnvVar(wxS("LC_MESSAGES"), &langFull) &&

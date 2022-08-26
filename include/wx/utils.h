@@ -161,6 +161,10 @@ WXDLLIMPEXP_BASE wxString wxGetCpuArchitectureName();
 WXDLLIMPEXP_BASE wxLinuxDistributionInfo wxGetLinuxDistributionInfo();
 #endif
 
+#ifdef __WXWASM__
+WXDLLIMPEXP_BASE wxBrowserInfo wxGetBrowserInfo();
+#endif
+
 // Return a string with the current date/time
 WXDLLIMPEXP_BASE wxString wxNow();
 

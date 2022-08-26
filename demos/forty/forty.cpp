@@ -89,7 +89,7 @@ bool FortyApp::OnInit()
      // Show the frame
     frame->Show(true);
 
-    frame->GetCanvas()->ShowPlayerDialog();
+    //frame->GetCanvas()->ShowPlayerDialog();
 
     return true;
 }

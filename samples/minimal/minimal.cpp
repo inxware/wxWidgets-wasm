@@ -142,7 +142,7 @@ MyFrame::MyFrame(const wxString& title)
        : wxFrame(NULL, wxID_ANY, title)
 {
     // set the frame icon
-    SetIcon(wxICON(sample));
+    //SetIcon(wxICON(sample));
 
 #if wxUSE_MENUBAR
     // create a menu bar

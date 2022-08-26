@@ -59,6 +59,7 @@ OBJECTS = anybutton.obj,\
 		metal.obj,\
 		radiobox.obj,\
 		scrthumb.obj,\
+		wasm.obj,\
 		win32.obj
 
 SOURCES =anybutton.cpp\
@@ -100,6 +101,7 @@ SOURCES =anybutton.cpp\
 		scrthumb.cpp \
 		[.themes]gtk.cpp \
 		[.themes]metal.cpp \
+		[.themes]wasm.cpp \
 		[.themes]win32.cpp
    
 all : $(SOURCES)
@@ -150,5 +152,7 @@ metal.obj : [.themes]metal.cpp
 	cxx $(CXXFLAGS)$(CXX_DEFINE) [.themes]metal.cpp
 radiobox.obj : radiobox.cpp
 scrthumb.obj : scrthumb.cpp
+wasm.obj : [.themes]wasm.cpp
+	cxx $(CXXFLAGS)$(CXX_DEFINE) [.themes]wasm.cpp
 win32.obj : [.themes]win32.cpp
 	cxx $(CXXFLAGS)$(CXX_DEFINE) [.themes]win32.cpp

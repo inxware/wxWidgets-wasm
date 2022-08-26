@@ -76,6 +76,8 @@ public:
     #include "wx/osx/popupwin.h"
 #elif defined(__WXQT__)
     #include "wx/qt/popupwin.h"
+#elif defined(__WXWASM__)
+    #include "wx/wasm/popupwin.h"
 #else
     #error "wxPopupWindow is not supported under this platform."
 #endif
@@ -110,6 +112,8 @@ public:
 
     // Override to implement delayed destruction of this window.
     virtual bool Destroy() wxOVERRIDE;
+
+    virtual bool ShouldSendClickToUnderlyingOnDismiss() const { return true; }
 
 protected:
     // this is called when the popup is disappeared because of anything

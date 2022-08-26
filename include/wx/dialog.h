@@ -69,6 +69,7 @@ public:
 
     // define public wxDialog methods to be implemented by the derived classes
     virtual int ShowModal() = 0;
+    virtual void ShowModal(std::function<void (int)> callback) = 0;
     virtual void EndModal(int retCode) = 0;
     virtual bool IsModal() const = 0;
     // show the dialog frame-modally (needs a parent), using app-modal

@@ -131,6 +131,8 @@ protected:
     virtual void DoDraw(wxControlRenderer *renderer) wxOVERRIDE;
     virtual wxBorder GetDefaultBorder() const wxOVERRIDE { return wxBORDER_NONE; }
 
+    wxSize GetScrollbarArrowSize() const;
+
     // forces update of thumb's visual appearance (does nothing if m_dirty=false)
     void UpdateThumb();
 

@@ -101,7 +101,7 @@ void wxCaret::InitGeneric()
     m_xOld =
     m_yOld = -1;
     if (m_width && m_height)
-        m_bmpUnderCaret.Create(m_width, m_height);
+        m_bmpUnderCaret.CreateScaled(m_width, m_height, wxBITMAP_SCREEN_DEPTH, wxContentScaleFactor());
 #endif
 }
 
@@ -173,7 +173,7 @@ void wxCaret::DoSize()
 #else
     // Change bitmap size
     if (m_width && m_height)
-        m_bmpUnderCaret = wxBitmap(m_width, m_height);
+        m_bmpUnderCaret.CreateScaled(m_width, m_height, wxBITMAP_SCREEN_DEPTH, wxContentScaleFactor());
     else
         m_bmpUnderCaret = wxBitmap();
 #endif
@@ -241,6 +241,26 @@ void wxCaret::Refresh()
         DoDraw( &dcWin, GetWindow() );
     }
 #else
+    dcWin.SetPen(*wxTRANSPARENT_PEN);
+    if ( m_blinkedOut )
+    {
+        dcWin.SetBrush(*wxWHITE);
+        dcWin.DrawRectangle(m_xOld, m_yOld, m_width, m_height);
+        m_xOld =
+        m_yOld = -1;
+    }
+    else
+    {
+        if ( m_xOld == -1 && m_yOld == -1 )
+        {
+            m_xOld = m_x;
+            m_yOld = m_y;
+        }
+
+        dcWin.SetBrush(*wxBLACK);
+        dcWin.DrawRectangle(m_x, m_y, m_width, m_height);
+    }
+/*
     wxMemoryDC dcMem;
     dcMem.SelectObject(m_bmpUnderCaret);
     if ( m_blinkedOut )
@@ -268,6 +288,7 @@ void wxCaret::Refresh()
         // and draw the caret there
         DoDraw(&dcWin, GetWindow());
     }
+*/
 #endif
 }
 
@@ -287,6 +308,7 @@ void wxCaret::DoDraw(wxDC *dc, wxWindow* win)
         }
     }
     dc->SetPen( pen );
+    dc->SetPen(*wxTRANSPARENT_PEN);
     dc->SetBrush(m_hasFocus ? brush : *wxTRANSPARENT_BRUSH);
 
     // VZ: unfortunately, the rectangle comes out a pixel smaller when this is

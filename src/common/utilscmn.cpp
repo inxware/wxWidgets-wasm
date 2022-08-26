@@ -380,6 +380,10 @@ bool wxPlatform::Is(int platform)
     if (platform == wxPORT_QT)
         return true;
 #endif
+#ifdef __WXWASM__
+    if (platform == wxPORT_WASM)
+        return true;
+#endif
 
     if (sm_customPlatforms && sm_customPlatforms->Index(platform) != wxNOT_FOUND)
         return true;
@@ -1053,7 +1057,7 @@ bool wxSetDetectableAutoRepeat( bool WXUNUSED(flag) )
 
 #if defined(__WINDOWS__) && !defined(__WXQT__) || \
     defined(__WXX11__) || defined(__WXGTK__) || defined(__WXMOTIF__) || \
-    defined(__WXOSX__)
+    defined(__WXOSX__) || defined(__WXWASM__)
 
 // implemented in a port-specific utils source file:
 bool wxDoLaunchDefaultBrowser(const wxLaunchBrowserParams& params);
@@ -1351,8 +1355,10 @@ wxWindow* wxGenericFindWindowAtPoint(const wxPoint& pt)
 #if wxUSE_MSGDLG
 
 int wxMessageBox(const wxString& message, const wxString& caption, long style,
-                 wxWindow *parent, int WXUNUSED(x), int WXUNUSED(y) )
+                 wxWindow *parent, int WXUNUSED(x), int WXUNUSED(y),
+                 std::function<void (int)> callback)
 {
+    wxMessageOutputDebug().Output(message);
     // add the appropriate icon unless this was explicitly disabled by use of
     // wxICON_NONE
     if ( !(style & wxICON_NONE) && !(style & wxICON_MASK) )
@@ -1360,26 +1366,37 @@ int wxMessageBox(const wxString& message, const wxString& caption, long style,
         style |= style & wxYES ? wxICON_QUESTION : wxICON_INFORMATION;
     }
 
-    wxMessageDialog dialog(parent, message, caption, style);
+    wxMessageDialog *dialog = new wxMessageDialog(parent, message, caption, style);
 
-    int ans = dialog.ShowModal();
-    switch ( ans )
-    {
-        case wxID_OK:
-            return wxOK;
-        case wxID_YES:
-            return wxYES;
-        case wxID_NO:
-            return wxNO;
-        case wxID_CANCEL:
-            return wxCANCEL;
-        case wxID_HELP:
-            return wxHELP;
-    }
+    dialog->ShowModal([dialog, callback](int ans) {
+      if (callback)
+      {
+          switch ( ans )
+          {
+              case wxID_OK:
+                  callback(wxOK);
+                  break;
+              case wxID_YES:
+                  callback(wxYES);
+                  break;
+              case wxID_NO:
+                  callback(wxNO);
+                  break;
+              case wxID_CANCEL:
+                  callback(wxCANCEL);
+                  break;
+              case wxID_HELP:
+                  callback(wxHELP);
+                  break;
+              default:
+                  wxFAIL_MSG( wxT("unexpected return code from wxMessageDialog") );
+                  break;
+          }
+      }
+      dialog->Destroy();
+  });
 
-    wxFAIL_MSG( wxT("unexpected return code from wxMessageDialog") );
-
-    return wxCANCEL;
+  return wxCANCEL;
 }
 
 wxVersionInfo wxGetLibraryVersionInfo()

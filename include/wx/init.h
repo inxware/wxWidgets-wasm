@@ -106,7 +106,7 @@ public:
     operator bool() const { return m_ok; }
 
     // dtor only does clean up if we initialized the library properly
-    ~wxInitializer() { if ( m_ok ) wxUninitialize(); }
+    ~wxInitializer() { /*if ( m_ok ) wxUninitialize();*/ }
 
 private:
     bool m_ok;

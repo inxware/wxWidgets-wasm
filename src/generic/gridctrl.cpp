@@ -52,7 +52,7 @@ void wxGridCellRenderer::Draw(wxGrid& grid,
             if ( grid.HasFocus() )
                 clr = grid.GetSelectionBackground();
             else
-                clr = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW);
+                clr = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
         }
         else
         {
@@ -87,7 +87,7 @@ void wxGridCellRenderer::SetTextColoursAndFont(const wxGrid& grid,
             if ( grid.HasFocus() )
                 clr = grid.GetSelectionBackground();
             else
-                clr = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW);
+                clr = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
             dc.SetTextBackground( clr );
             dc.SetTextForeground( grid.GetSelectionForeground() );
         }

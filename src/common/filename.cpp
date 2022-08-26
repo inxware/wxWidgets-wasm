@@ -2713,7 +2713,7 @@ bool wxFileName::SetTimes(const wxDateTime *dtAccess,
 
 bool wxFileName::Touch() const
 {
-#if defined(__UNIX_LIKE__)
+#if defined(__UNIX_LIKE__) && !defined(__WXWASM__)
     // under Unix touching file is simple: just pass NULL to utime()
     if ( utime(GetFullPath().fn_str(), NULL) == 0 )
     {

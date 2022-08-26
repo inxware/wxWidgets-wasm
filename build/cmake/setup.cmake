@@ -668,7 +668,7 @@ endforeach()
 check_type_size("long long" SIZEOF_LONG_LONG)
 check_type_size(ssize_t SSIZE_T)
 
-test_big_endian(WORDS_BIGENDIAN)
+#test_big_endian(WORDS_BIGENDIAN)
 
 configure_file(build/cmake/setup.h.in ${wxSETUP_HEADER_FILE})
 if(DEFINED wxSETUP_HEADER_FILE_DEBUG)

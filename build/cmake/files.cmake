@@ -2268,6 +2268,77 @@ set(DFB_LOWLEVEL_HDR
     wx/dfb/wrapdfb.h
 )
 
+set(WASM_LOWLEVEL_SRC
+    src/generic/caret.cpp
+    src/generic/icon.cpp
+    src/generic/imaglist.cpp
+    src/generic/paletteg.cpp
+    src/generic/regiong.cpp
+    src/generic/textmeasure.cpp
+    src/wasm/app.cpp
+    src/wasm/bitmap.cpp
+    src/wasm/brush.cpp
+    src/wasm/clipbrd.cpp
+    src/wasm/colour.cpp
+    src/wasm/config.cpp
+    src/wasm/cursor.cpp
+    src/wasm/dataobj.cpp
+    src/wasm/dc.cpp
+    src/wasm/dcclient.cpp
+    src/wasm/dcmemory.cpp
+    src/wasm/dcscreen.cpp
+    src/wasm/display.cpp
+    src/wasm/dnd.cpp
+    src/wasm/evtloop.cpp
+    src/wasm/font.cpp
+    src/wasm/fontenum.cpp
+    src/wasm/fontutil.cpp
+    src/wasm/keyboard.cpp
+    src/wasm/mouse.cpp
+    src/wasm/nonownedwnd.cpp
+    src/wasm/pen.cpp
+    src/wasm/popupwin.cpp
+    src/wasm/region.cpp
+    src/wasm/settings.cpp
+    src/wasm/timer.cpp
+    src/wasm/toplevel.cpp
+    src/wasm/utils.cpp
+    src/wasm/window.cpp
+)
+
+set(WASM_LOWLEVEL_SRC
+    wx/generic/caret.h
+    wx/generic/icon.h
+    wx/generic/imaglist.h
+    wx/generic/paletteg.h
+    wx/generic/region.h
+    wx/wasm/app.h
+    wx/wasm/bitmap.h
+    wx/wasm/brush.h
+    wx/wasm/chkconf.h
+    wx/wasm/clipbrd.h
+    wx/wasm/colour.h
+    wx/wasm/config.h
+    wx/wasm/cursor.h
+    wx/wasm/dataform.h
+    wx/wasm/dataobj.h
+    wx/wasm/dataobj2.h
+    wx/wasm/dc.h
+    wx/wasm/dcclient.h
+    wx/wasm/dcmemory.h
+    wx/wasm/dcscreen.h
+    wx/wasm/dnd.h
+    wx/wasm/evtloop.h
+    wx/wasm/font.h
+    wx/wasm/nonownedwnd.h
+    wx/wasm/private.h
+    wx/wasm/pen.h
+    wx/wasm/popupwin.h
+    wx/wasm/region.h
+    wx/wasm/toplevel.h
+    wx/wasm/window.h
+)
+
 set(OSX_LOWLEVEL_SRC
     # Shared wxMac and wxCocoa files
     #TODO:     <if cond="PLATFORM_MACOSX=='1'">

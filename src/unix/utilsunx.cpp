@@ -964,7 +964,7 @@ static bool wxGetHostNameInternal(wxChar *buf, int sz)
     *buf = wxT('\0');
 
     // we're using uname() which is POSIX instead of less standard sysinfo()
-#if defined(HAVE_UNAME)
+#if defined(HAVE_UNAME) && !defined(__WXWASM__)
     struct utsname uts;
     bool ok = uname(&uts) != -1;
     if ( ok )
@@ -1073,6 +1073,8 @@ bool wxGetUserName(wxChar *buf, int sz)
 #endif // HAVE_PW_GECOS/!HAVE_PW_GECOS
 }
 
+#ifndef __WXWASM__
+
 bool wxIsPlatform64Bit()
 {
 #if SIZEOF_VOID_P == 8
@@ -1092,6 +1094,8 @@ wxString wxGetCpuArchitectureName()
 {
     return wxGetCommandOutput(wxT("uname -m"));
 }
+
+#endif
 
 #ifdef __LINUX__
 
@@ -1128,7 +1132,7 @@ wxLinuxDistributionInfo wxGetLinuxDistributionInfo()
 #endif // __LINUX__
 
 // these functions are in src/osx/utils_base.mm for wxOSX.
-#ifndef __DARWIN__
+#if !defined(__DARWIN__) && !defined(__WXWASM__)
 
 wxOperatingSystemId wxGetOsVersion(int *verMaj, int *verMin, int *verMicro)
 {
@@ -1181,7 +1185,7 @@ bool wxCheckOsVersion(int majorVsn, int minorVsn, int microVsn)
         || (majorCur == majorVsn && minorCur == minorVsn && microCur >= microVsn);
 }
 
-#endif // !__DARWIN__
+#endif // !__DARWIN__ && !__WXWASM__
 
 unsigned long wxGetProcessId()
 {

@@ -203,6 +203,12 @@ void wxPlatformInfo::InitForCurrentPlatform()
     m_ldi = wxGetLinuxDistributionInfo();
 #endif
     // else: leave m_ldi empty
+
+#ifdef __WXWASM__
+    m_browserInfo = wxGetBrowserInfo();
+#endif
+    // else: leave m_browserInfo empty
+
 }
 
 /* static */

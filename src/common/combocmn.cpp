@@ -188,6 +188,18 @@ wxCONSTRUCTOR_5( wxComboBox, wxWindow*, Parent, wxWindowID, Id, \
 #undef COMBO_MARGIN
 #define COMBO_MARGIN                  FOCUS_RING
 
+#elif defined(__WXWASM__)
+
+#include "wx/dialog.h"
+#define wxComboCtrlGenericTLW   wxDialog
+
+#define USE_TRANSIENT_POPUP           1 // Use wxPopupWindowTransient (preferred, if it works properly on platform)
+#define TRANSIENT_POPUPWIN_IS_PERFECT 1 // wxPopupTransientWindow works, its child can have focus, and common
+                                        // native controls work on it like normal.
+#define POPUPWIN_IS_PERFECT           1 // Same, but for non-transient popup window.
+#define TEXTCTRL_TEXT_CENTERED        0 // 1 if text in textctrl is vertically centered
+#define FOCUS_RING                    0 // No focus ring on wxWASM
+
 #else
 
 #include "wx/dialog.h"
@@ -206,7 +218,7 @@ wxCONSTRUCTOR_5( wxComboBox, wxWindow*, Parent, wxWindowID, Id, \
 // Popupwin is really only supported on wxMSW and wxGTK, regardless
 // what the wxUSE_POPUPWIN says.
 // FIXME: Why isn't wxUSE_POPUPWIN reliable any longer? (it was in wxW2.6.2)
-#if (!defined(__WXMSW__) && !defined(__WXGTK__) && !defined(__WXMAC__))
+#if (!defined(__WXMSW__) && !defined(__WXGTK__) && !defined(__WXMAC__) && !defined(__WXWASM__))
 #undef wxUSE_POPUPWIN
 #define wxUSE_POPUPWIN 0
 #endif
@@ -518,8 +530,8 @@ bool wxComboPopupWindow::ProcessLeftDown(wxMouseEvent& event)
 void wxComboPopupWindow::OnDismiss()
 {
     wxComboCtrlBase* combo = (wxComboCtrlBase*) GetParent();
-    wxASSERT_MSG( wxDynamicCast(combo, wxComboCtrlBase),
-                  wxT("parent might not be wxComboCtrl, but check wxIMPLEMENT_DYNAMIC_CLASS2() macro for correctness") );
+    //wxASSERT_MSG( wxDynamicCast(combo, wxComboCtrlBase),
+    //              wxT("parent might not be wxComboCtrl, but check wxIMPLEMENT_DYNAMIC_CLASS2() macro for correctness") );
 
     combo->OnPopupDismiss(true);
 }
@@ -2295,7 +2307,7 @@ void wxComboCtrlBase::ShowPopup()
 
     wxRect displayRect = wxDisplay(this).GetGeometry();
     screenHeight = displayRect.GetHeight();
-    scrPos = GetScreenPosition();
+    scrPos = GetScreenPosition() - GetClientAreaOrigin();
 
     spaceAbove = scrPos.y - displayRect.GetY();
     spaceBelow = screenHeight - spaceAbove - ctrlSz.y;

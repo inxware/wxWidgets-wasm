@@ -312,12 +312,12 @@ void wxGridRowHeaderRendererDefault::DrawBorder(const wxGrid& grid,
                                                 wxDC& dc,
                                                 wxRect& rect) const
 {
-    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DDKSHADOW)));
+    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
     dc.DrawLine(rect.GetRight(), rect.GetTop(),
                 rect.GetRight(), rect.GetBottom());
 
     dc.DrawLine(rect.GetLeft(), rect.GetBottom(),
-                rect.GetRight() + 1, rect.GetBottom());
+                rect.GetRight(), rect.GetBottom());
 
     // Only draw the external borders when the containing control doesn't have
     // any border, otherwise they would compound with the outer border which
@@ -331,11 +331,13 @@ void wxGridRowHeaderRendererDefault::DrawBorder(const wxGrid& grid,
         ofs = 1;
     }
 
+/*
     dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
     dc.DrawLine(rect.GetLeft() + ofs, rect.GetTop(),
                 rect.GetLeft() + ofs, rect.GetBottom());
     dc.DrawLine(rect.GetLeft() + ofs, rect.GetTop(),
                 rect.GetRight(), rect.GetTop());
+*/
 
     rect.Deflate(1 + ofs);
 }
@@ -344,11 +346,11 @@ void wxGridColumnHeaderRendererDefault::DrawBorder(const wxGrid& grid,
                                                    wxDC& dc,
                                                    wxRect& rect) const
 {
-    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DDKSHADOW)));
+    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
     dc.DrawLine(rect.GetRight(), rect.GetTop(),
                 rect.GetRight(), rect.GetBottom());
     dc.DrawLine(rect.GetLeft(), rect.GetBottom(),
-                rect.GetRight() + 1, rect.GetBottom());
+                rect.GetRight(), rect.GetBottom());
 
     // As above, don't draw the outer border if the control has its own one.
     int ofs = 0;
@@ -360,11 +362,13 @@ void wxGridColumnHeaderRendererDefault::DrawBorder(const wxGrid& grid,
         ofs = 1;
     }
 
+/*
     dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
     dc.DrawLine(rect.GetLeft(), rect.GetTop() + ofs,
                 rect.GetLeft(), rect.GetBottom());
     dc.DrawLine(rect.GetLeft(), rect.GetTop() + ofs,
                 rect.GetRight(), rect.GetTop() + ofs);
+*/
 
     rect.Deflate(1 + ofs);
 }
@@ -373,7 +377,7 @@ void wxGridCornerHeaderRendererDefault::DrawBorder(const wxGrid& grid,
                                                    wxDC& dc,
                                                    wxRect& rect) const
 {
-    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DDKSHADOW)));
+    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
     dc.DrawLine(rect.GetRight() - 1, rect.GetBottom() - 1,
                 rect.GetRight() - 1, rect.GetTop());
     dc.DrawLine(rect.GetRight() - 1, rect.GetBottom() - 1,
@@ -392,11 +396,13 @@ void wxGridCornerHeaderRendererDefault::DrawBorder(const wxGrid& grid,
         ofs = 1;
     }
 
+/*
     dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
     dc.DrawLine(rect.GetLeft() + 1, rect.GetTop() + ofs,
                 rect.GetRight() - 1, rect.GetTop() + ofs);
     dc.DrawLine(rect.GetLeft() + ofs, rect.GetTop() + ofs,
                 rect.GetLeft() + ofs, rect.GetBottom() - 1);
+*/
 
     rect.Deflate(1 + ofs);
 }
@@ -7437,6 +7443,7 @@ void wxGrid::ShowCellEditControl()
     {
         if ( !IsVisible( m_currentCellCoords, false ) )
         {
+            HideCellEditControl();
             m_cellEditCtrlEnabled = false;
             return;
         }

@@ -47,6 +47,8 @@ class WXDLLIMPEXP_FWD_CORE wxRenderer;
 #define wxWindowNative wxWindowX11
 #elif defined(__WXMAC__)
 #define wxWindowNative wxWindowMac
+#elif defined(__WXWASM__)
+#define wxWindowNative wxWindowWasm
 #endif
 
 class WXDLLIMPEXP_CORE wxWindow : public wxWindowNative
@@ -203,6 +205,7 @@ protected:
 
 #if wxUSE_MENUS
     virtual bool DoPopupMenu(wxMenu *menu, int x, int y) wxOVERRIDE;
+    virtual void DoPopupMenu(wxMenu *menu, int x, int y, std::function<void (bool)> callback) wxOVERRIDE;
 #endif // wxUSE_MENUS
 
     // we deal with the scrollbars in these functions
@@ -282,6 +285,8 @@ private:
 
     // the last window over which Alt was pressed (used by OnKeyUp)
     static wxWindow *ms_winLastAltPress;
+
+    std::function<void (int)> m_popupCallback;
 #endif // wxUSE_MENUS
 
     wxDECLARE_DYNAMIC_CLASS(wxWindow);

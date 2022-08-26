@@ -23,6 +23,7 @@ public:
                            const wxPoint& pos = wxDefaultPosition);
 
     virtual int ShowModal() wxOVERRIDE;
+    virtual void ShowModal(std::function<void (int)> callback) wxOVERRIDE;
 
 protected:
     // Creates a message dialog taking any options that have been set after

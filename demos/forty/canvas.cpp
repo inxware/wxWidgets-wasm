@@ -57,6 +57,7 @@ FortyCanvas::FortyCanvas(wxWindow* parent, const wxPoint& pos, const wxSize& siz
 
 FortyCanvas::~FortyCanvas()
 {
+    printf("destroy\n");
     UpdateScores();
     delete m_game;
     delete m_scoreFile;
@@ -84,6 +85,7 @@ void FortyCanvas::UpdateScores()
 
 void FortyCanvas::OnDraw(wxDC& dc)
 {
+    printf("OnDraw\n");
     dc.SetFont(* m_font);
     m_game->Redraw(dc);
 #if 0
@@ -150,12 +152,14 @@ Called when the main frame is closed
 */
 bool FortyCanvas::OnCloseCanvas()
 {
+/*
     if (m_game->InPlay() &&
         wxMessageBox(wxT("Are you sure you want to\nabandon the current game?"),
             wxT("Warning"), wxYES_NO | wxICON_QUESTION) == wxNO)
     {
         return false;
     }
+*/
     return true;
 }
 

@@ -149,6 +149,10 @@ protected:
     // common part of all ctors
     void Init();
 
+    bool IsInverted() const {
+        return HasFlag(wxSL_INVERSE);
+    }
+
     // normalize the value to fit in the range
     int NormalizeValue(int value) const;
 

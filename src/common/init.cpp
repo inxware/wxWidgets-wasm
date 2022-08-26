@@ -487,9 +487,11 @@ int wxEntryReal(int& argc, wxChar **argv)
         // app initialization
         if ( !wxTheApp->CallOnInit() )
         {
+            printf("OnInit failed\n");
             // don't call OnExit() if OnInit() failed
             return -1;
         }
+        printf("OnInit succeeded\n");
 
         // ensure that OnExit() is called if OnInit() had succeeded
         class CallOnExit

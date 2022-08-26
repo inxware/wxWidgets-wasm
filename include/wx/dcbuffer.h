@@ -17,7 +17,7 @@
 
 // Split platforms into two groups - those which have well-working
 // double-buffering by default, and those which do not.
-#if defined(__WXMAC__) || defined(__WXGTK20__) || defined(__WXDFB__) || defined(__WXQT__)
+#if defined(__WXMAC__) || defined(__WXGTK20__) || defined(__WXDFB__) || defined(__WXQT__) || defined(__WXWASM__)
     #define wxALWAYS_NATIVE_DOUBLE_BUFFER       1
 #else
     #define wxALWAYS_NATIVE_DOUBLE_BUFFER       0
@@ -224,7 +224,8 @@ public:
     wxAutoBufferedPaintDC(wxWindow* win)
         : wxAutoBufferedPaintDCBase(win)
     {
-        wxASSERT_MSG( win->GetBackgroundStyle() == wxBG_STYLE_PAINT,
+        wxASSERT_MSG( win->GetBackgroundStyle() == wxBG_STYLE_PAINT ||
+                      win->GetBackgroundStyle() == wxBG_STYLE_TRANSPARENT,
             "You need to call SetBackgroundStyle(wxBG_STYLE_PAINT) in ctor, "
             "and also, if needed, paint the background in wxEVT_PAINT handler."
         );

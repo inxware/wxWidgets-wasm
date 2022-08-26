@@ -319,7 +319,8 @@ int WXDLLIMPEXP_CORE wxMessageBox(const wxString& message,
                              const wxString& caption = wxASCII_STR(wxMessageBoxCaptionStr),
                              long style = wxOK | wxCENTRE,
                              wxWindow *parent = NULL,
-                             int x = wxDefaultCoord, int y = wxDefaultCoord);
+                             int x = wxDefaultCoord, int y = wxDefaultCoord,
+                             std::function<void (int)> callback = NULL);
 
 #endif // wxUSE_MSGDLG
 

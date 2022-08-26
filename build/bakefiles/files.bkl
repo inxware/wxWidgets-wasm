@@ -2007,7 +2007,79 @@ IMPORTANT: please read docs/tech/tn0016.txt before modifying this file!
     wx/x11/window.h
 </set>
 
+<!-- ====================================================================== -->
+<!--                             wxWebAssembly                              -->
+<!-- ====================================================================== -->
 
+<set var="WASM_LOWLEVEL_SRC" hints="files">
+    src/generic/caret.cpp
+    src/generic/icon.cpp
+    src/generic/imaglist.cpp
+    src/generic/paletteg.cpp
+    src/generic/regiong.cpp
+    src/generic/textmeasure.cpp
+    src/wasm/app.cpp
+    src/wasm/bitmap.cpp
+    src/wasm/brush.cpp
+    src/wasm/clipbrd.cpp
+    src/wasm/colour.cpp
+    src/wasm/config.cpp
+    src/wasm/cursor.cpp
+    src/wasm/dataobj.cpp
+    src/wasm/dc.cpp
+    src/wasm/dcclient.cpp
+    src/wasm/dcmemory.cpp
+    src/wasm/dcscreen.cpp
+    src/wasm/display.cpp
+    src/wasm/dnd.cpp
+    src/wasm/evtloop.cpp
+    src/wasm/font.cpp
+    src/wasm/fontenum.cpp
+    src/wasm/fontutil.cpp
+    src/wasm/keyboard.cpp
+    src/wasm/mouse.cpp
+    src/wasm/nonownedwnd.cpp
+    src/wasm/pen.cpp
+    src/wasm/popupwin.cpp
+    src/wasm/region.cpp
+    src/wasm/settings.cpp
+    src/wasm/timer.cpp
+    src/wasm/toplevel.cpp
+    src/wasm/utils.cpp
+    src/wasm/window.cpp
+</set>
+<set var="WASM_LOWLEVEL_HDR" hints="files">
+    wx/generic/caret.h
+    wx/generic/icon.h
+    wx/generic/imaglist.h
+    wx/generic/paletteg.h
+    wx/generic/region.h
+    wx/wasm/app.h
+    wx/wasm/bitmap.h
+    wx/wasm/brush.h
+    wx/wasm/chkconf.h
+    wx/wasm/clipbrd.h
+    wx/wasm/colour.h
+    wx/wasm/config.h
+    wx/wasm/cursor.h
+    wx/wasm/dataform.h
+    wx/wasm/dataobj.h
+    wx/wasm/dataobj2.h
+    wx/wasm/dc.h
+    wx/wasm/dcclient.h
+    wx/wasm/dcmemory.h
+    wx/wasm/dcscreen.h
+    wx/wasm/dnd.h
+    wx/wasm/evtloop.h
+    wx/wasm/font.h
+    wx/wasm/nonownedwnd.h
+    wx/wasm/private.h
+    wx/wasm/pen.h
+    wx/wasm/popupwin.h
+    wx/wasm/region.h
+    wx/wasm/toplevel.h
+    wx/wasm/window.h
+</set>
 
 <!-- ====================================================================== -->
 <!--                                wxMSW                                   -->
@@ -3537,6 +3609,7 @@ IMPORTANT: please read docs/tech/tn0016.txt before modifying this file!
         <if cond="TOOLKIT=='OSX_IPHONE'">$(OSX_LOWLEVEL_SRC)</if>
         <if cond="TOOLKIT=='X11'">$(X11_LOWLEVEL_SRC)</if>
         <if cond="TOOLKIT=='DFB'">$(DFB_LOWLEVEL_SRC)</if>
+        <if cond="TOOLKIT=='WASM'">$(WASM_LOWLEVEL_SRC)</if>
     </set>
     <set var="LOWLEVEL_HDR" hints="files">
         <if cond="TOOLKIT=='GTK' and TOOLKIT_VERSION=='4'">$(GTK_LOWLEVEL_HDR)</if>
@@ -3549,6 +3622,7 @@ IMPORTANT: please read docs/tech/tn0016.txt before modifying this file!
         <if cond="TOOLKIT=='OSX_IPHONE'">$(OSX_LOWLEVEL_HDR)</if>
         <if cond="TOOLKIT=='X11'">$(X11_LOWLEVEL_HDR)</if>
         <if cond="TOOLKIT=='DFB'">$(DFB_LOWLEVEL_HDR)</if>
+        <if cond="TOOLKIT=='WASM'">$(WASM_LOWLEVEL_HDR)</if>
     </set>
 
     <set var="PLATFORM_SRC" hints="files">

@@ -558,7 +558,10 @@ private:
       // gcc 7 warns about not being able to optimize this loop because of
       // possible loop variable overflow, really not sure what to do about
       // this, so just disable this warnings for now
+
+#ifndef __clang__
       wxGCC_ONLY_WARNING_SUPPRESS(unsafe-loop-optimizations)
+#endif
 
       Cache::Element * const cacheEnd = GetCacheEnd();
       for ( Cache::Element *c = cacheBegin; c != cacheEnd; c++ )
@@ -567,7 +570,9 @@ private:
               return c;
       }
 
+#ifndef __clang__
       wxGCC_ONLY_WARNING_RESTORE(unsafe-loop-optimizations)
+#endif
 
       return NULL;
   }

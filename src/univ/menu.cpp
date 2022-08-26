@@ -32,6 +32,7 @@
     #include "wx/log.h"
     #include "wx/frame.h"
     #include "wx/dcclient.h"
+    #include "wx/timer.h"
 #endif // WX_PRECOMP
 
 #include "wx/popupwin.h"
@@ -42,6 +43,10 @@
 #ifdef __WXMSW__
     #include "wx/msw/private.h"
 #endif // __WXMSW__
+
+#define SUBMENU_TIMEOUT 50
+#define OVERFLOW_INITIAL_TIMEOUT 100
+#define OVERFLOW_REPEAT_TIMEOUT 10
 
 typedef wxMenuItemList::compatibility_iterator wxMenuItemIter;
 
@@ -114,6 +119,11 @@ private:
 
 WX_DEFINE_OBJARRAY(wxMenuInfoArray);
 
+enum {
+  wxID_SUBMENU_TIMER,
+  wxID_OVERFLOW_TIMER
+};
+
 // ----------------------------------------------------------------------------
 // wxPopupMenuWindow: a popup window showing a menu
 // ----------------------------------------------------------------------------
@@ -141,6 +151,10 @@ public:
     void OnIdle(wxIdleEvent& WXUNUSED(event)) { }
 #endif
 
+    void OnSubMenuTimer(wxTimerEvent& event);
+
+    void OnOverflowTimer(wxTimerEvent& event);
+
     // get the currently selected item (may be NULL)
     wxMenuItem *GetCurrentItem() const
     {
@@ -165,6 +179,12 @@ public:
     // don't dismiss the popup window if the parent menu was clicked
     virtual bool ProcessLeftDown(wxMouseEvent& event);
 
+    virtual bool ShouldSendClickToUnderlyingOnDismiss() const { return false; }
+
+    wxCoord GetMaxClientHeight() const {
+        return wxGetClientDisplayRect().GetSize().y - GetScreenPosition().y - GetClientAreaOrigin().y;
+    }
+
 protected:
     // how did we perform this operation?
     enum InputMethod
@@ -183,7 +203,10 @@ protected:
     void OnLeftUp(wxMouseEvent& event);
     void OnMouseMove(wxMouseEvent& event);
     void OnMouseLeave(wxMouseEvent& event);
+    void OnMouseWheel(wxMouseEvent& event);
     void OnKeyDown(wxKeyEvent& event);
+
+    bool IsPointTrackingToSubMenu(const wxPoint& target);
 
     // reset the current item and node
     void ResetCurrent();
@@ -233,6 +256,41 @@ protected:
     // get next node after the given one, wrapping if it's the last one
     wxMenuItemIter GetNextNode(wxMenuItemIter node) const;
 
+    bool HasOverflow() const { return GetClientSize().y > GetMaxClientHeight(); }
+
+    bool HasOverflowArrowUp() const
+    {
+        return HasOverflow() && GetOffsetY() < 0;
+    }
+
+    bool HasOverflowArrowDown() const
+    {
+        return HasOverflow() && GetClientSize().y + GetOffsetY() > GetMaxClientHeight();
+    }
+
+    wxRect GetOverflowArrowUpRect(const wxMenuGeometryInfo& gi) const
+    {
+        return wxRect(0, 0, gi.GetSize().x, gi.GetOverflowHeight());
+    }
+
+    wxRect GetOverflowArrowDownRect(const wxMenuGeometryInfo& gi) const
+    {
+        wxCoord y = GetMaxClientHeight() - gi.GetOverflowHeight();
+        return wxRect(0, y, gi.GetSize().x, gi.GetOverflowHeight());
+    }
+
+    bool OverflowArrowHitTest(const wxPoint&) const;
+
+    int GetOffsetY() const { return m_offsetY; }
+    void SetOffsetY(int offset)
+    {
+        if (offset != m_offsetY)
+        {
+            m_offsetY = offset;
+            Refresh();
+        }
+    }
+
 private:
     // the menu we show
     wxMenu *m_menu;
@@ -242,6 +300,12 @@ private:
 
     // do we currently have an opened submenu?
     bool m_hasOpenSubMenu;
+
+    wxPoint m_subMenuPoint;
+    wxTimer m_subMenuTimer;
+    wxTimer m_overflowTimer;
+
+    int m_offsetY;
 
     wxDECLARE_EVENT_TABLE();
 };
@@ -282,10 +346,13 @@ wxBEGIN_EVENT_TABLE(wxPopupMenuWindow, wxPopupTransientWindow)
 
     EVT_LEFT_UP(wxPopupMenuWindow::OnLeftUp)
     EVT_MOTION(wxPopupMenuWindow::OnMouseMove)
+    EVT_MOUSEWHEEL(wxPopupMenuWindow::OnMouseWheel)
     EVT_LEAVE_WINDOW(wxPopupMenuWindow::OnMouseLeave)
 #ifdef __WXMSW__
     EVT_IDLE(wxPopupMenuWindow::OnIdle)
 #endif
+    EVT_TIMER(wxID_SUBMENU_TIMER, wxPopupMenuWindow::OnSubMenuTimer)
+    EVT_TIMER(wxID_OVERFLOW_TIMER, wxPopupMenuWindow::OnOverflowTimer)
 wxEND_EVENT_TABLE()
 
 wxBEGIN_EVENT_TABLE(wxMenuBar, wxMenuBarBase)
@@ -294,6 +361,7 @@ wxBEGIN_EVENT_TABLE(wxMenuBar, wxMenuBarBase)
     EVT_KEY_DOWN(wxMenuBar::OnKeyDown)
 
     EVT_LEFT_DOWN(wxMenuBar::OnLeftDown)
+    EVT_LEFT_DCLICK(wxMenuBar::OnLeftDown)
     EVT_MOTION(wxMenuBar::OnMouseMove)
 wxEND_EVENT_TABLE()
 
@@ -310,9 +378,14 @@ wxPopupMenuWindow::wxPopupMenuWindow(wxWindow *parent, wxMenu *menu)
     m_menu = menu;
     m_hasOpenSubMenu = false;
 
+    m_subMenuTimer.SetOwner(this, wxID_SUBMENU_TIMER);
+    m_overflowTimer.SetOwner(this, wxID_OVERFLOW_TIMER);
+
+    m_offsetY = 0;
+
     ResetCurrent();
 
-    (void)Create(parent, wxBORDER_RAISED);
+    (void)Create(parent, wxBORDER_STATIC);
 
     SetCursor(wxCURSOR_ARROW);
 }
@@ -343,8 +416,11 @@ void wxPopupMenuWindow::SetCurrentItem(wxMenuItemIter node)
 
 void wxPopupMenuWindow::ChangeCurrent(wxMenuItemIter node)
 {
-    if ( !m_nodeCurrent || !node || (node != m_nodeCurrent) )
+    if ( node != m_nodeCurrent )
     {
+        m_subMenuTimer.Stop();
+        m_overflowTimer.Stop();
+
         wxMenuItemIter nodeOldCurrent = m_nodeCurrent;
 
         m_nodeCurrent = node;
@@ -508,9 +584,10 @@ wxPopupMenuWindow::GetMenuItemFromPoint(const wxPoint& pt) const
 {
     // we only use the y coord normally, but still check x in case the point is
     // outside the window completely
-    if ( wxWindow::HitTest(pt) == wxHT_WINDOW_INSIDE )
+    if ( wxWindow::HitTest(pt) == wxHT_WINDOW_INSIDE &&
+         !OverflowArrowHitTest(pt) )
     {
-        wxCoord y = 0;
+        wxCoord y = GetOffsetY();
         for ( wxMenuItemIter node = m_menu->GetMenuItems().GetFirst();
               node;
               node = node->GetNext() )
@@ -526,6 +603,26 @@ wxPopupMenuWindow::GetMenuItemFromPoint(const wxPoint& pt) const
     }
 
     return wxMenuItemIter();
+}
+
+bool wxPopupMenuWindow::OverflowArrowHitTest(const wxPoint& pt) const
+{
+    if (HasOverflowArrowUp())
+    {
+        if (GetOverflowArrowUpRect(m_menu->GetGeometryInfo()).Contains(pt))
+        {
+            return true;
+        }
+    }
+    if (HasOverflowArrowDown())
+    {
+        if (GetOverflowArrowDownRect(m_menu->GetGeometryInfo()).Contains(pt))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -553,11 +650,11 @@ void wxPopupMenuWindow::DoDraw(wxControlRenderer *renderer)
 
     // FIXME: this should be done in the renderer, however when it is fixed
     //        wxPopupMenuWindow::RefreshItem() should be changed too!
-    dc.SetLogicalOrigin(1, 1);
+    //dc.SetLogicalOrigin(1, 1);
 
     wxRenderer *rend = renderer->GetRenderer();
 
-    wxCoord y = 0;
+    wxCoord y = GetOffsetY();
     const wxMenuGeometryInfo& gi = m_menu->GetGeometryInfo();
     for ( wxMenuItemIter node = m_menu->GetMenuItems().GetFirst();
           node;
@@ -565,61 +662,75 @@ void wxPopupMenuWindow::DoDraw(wxControlRenderer *renderer)
     {
         wxMenuItem *item = node->GetData();
 
-        if ( item->IsSeparator() )
-        {
-            rend->DrawMenuSeparator(dc, y, gi);
-        }
-        else // not a separator
-        {
-            int flags = 0;
-            if ( item->IsCheckable() )
-            {
-                flags |= wxCONTROL_CHECKABLE;
+        if (y + item->GetHeight() >= 0 && y < GetMaxClientHeight()) {
+          if ( item->IsSeparator() )
+          {
+              rend->DrawMenuSeparator(dc, y, gi);
+          }
+          else // not a separator
+          {
+              int flags = 0;
+              if ( item->IsCheckable() )
+              {
+                  flags |= wxCONTROL_CHECKABLE;
 
-                if ( item->IsChecked() )
-                {
-                    flags |= wxCONTROL_CHECKED;
-                }
-            }
+                  if ( item->IsChecked() )
+                  {
+                      flags |= wxCONTROL_CHECKED;
+                  }
+              }
 
-            if ( !item->IsEnabled() )
-                flags |= wxCONTROL_DISABLED;
+              if ( !item->IsEnabled() )
+                  flags |= wxCONTROL_DISABLED;
 
-            if ( item->IsSubMenu() )
-                flags |= wxCONTROL_ISSUBMENU;
+              if ( item->IsSubMenu() )
+                  flags |= wxCONTROL_ISSUBMENU;
 
-            if ( item == GetCurrentItem() )
-                flags |= wxCONTROL_SELECTED;
+              if ( item == GetCurrentItem() )
+                  flags |= wxCONTROL_SELECTED;
 
-            wxBitmap bmp;
+              wxBitmap bmp;
 
-            if ( !item->IsEnabled() )
-            {
-                bmp = item->GetDisabledBitmap();
-            }
+              if ( !item->IsEnabled() )
+              {
+                  bmp = item->GetDisabledBitmap();
+              }
 
-            if ( !bmp.IsOk() )
-            {
-                // strangely enough, for unchecked item we use the
-                // "checked" bitmap because this is the default one - this
-                // explains this strange boolean expression
-                bmp = item->GetBitmap(!item->IsCheckable() || item->IsChecked());
-            }
+              if ( !bmp.IsOk() )
+              {
+                  // strangely enough, for unchecked item we use the
+                  // "checked" bitmap because this is the default one - this
+                  // explains this strange boolean expression
+                  bmp = item->GetBitmap(!item->IsCheckable() || item->IsChecked());
+              }
 
-            rend->DrawMenuItem
-                  (
-                     dc,
-                     y,
-                     gi,
-                     item->GetItemLabelText(),
-                     item->GetAccelString(),
-                     bmp,
-                     flags,
-                     item->GetAccelIndex()
-                  );
+              rend->DrawMenuItem
+                    (
+                       dc,
+                       y,
+                       gi,
+                       item->GetItemLabelText(),
+                       item->GetAccelString(),
+                       bmp,
+                       flags,
+                       item->GetAccelIndex()
+                    );
+          }
         }
 
         y += item->GetHeight();
+    }
+
+    if (HasOverflowArrowUp())
+    {
+        wxRect rect = GetOverflowArrowUpRect(gi);
+        rend->DrawMenuOverflowArrow(dc, rect, wxUP);
+    }
+
+    if (HasOverflowArrowDown())
+    {
+        wxRect rect = GetOverflowArrowDownRect(gi);
+        rend->DrawMenuOverflowArrow(dc, rect, wxDOWN);
     }
 }
 
@@ -634,12 +745,10 @@ void wxPopupMenuWindow::ClickItem(wxMenuItem *item)
     wxASSERT_MSG( !item->IsSeparator() && !item->IsSubMenu(),
                   wxT("can't click this item") );
 
-    wxMenu* menu = m_menu;
+    m_menu->ClickItem(item);
 
     // close all menus
     DismissAndNotify();
-
-    menu->ClickItem(item);
 }
 
 void wxPopupMenuWindow::OpenSubmenu(wxMenuItem *item, InputMethod how)
@@ -650,7 +759,7 @@ void wxPopupMenuWindow::OpenSubmenu(wxMenuItem *item, InputMethod how)
     wxCHECK_RET( submenu, wxT("can only open submenus!") );
 
     // FIXME: should take into account the border width
-    submenu->Popup(ClientToScreen(wxPoint(0, item->GetPosition())),
+    submenu->Popup(ClientToScreen(wxPoint(0, item->GetPosition() + GetOffsetY())),
                    wxSize(m_menu->GetGeometryInfo().GetSize().x, 0),
                    how == WithKeyboard /* preselect first item then */);
 
@@ -751,8 +860,47 @@ void wxPopupMenuWindow::OnMouseMove(wxMouseEvent& event)
     event.Skip();
 }
 
+bool wxPopupMenuWindow::IsPointTrackingToSubMenu(const wxPoint& target) {
+    wxMenuItem *item = GetCurrentItem();
+    wxCHECK_MSG( CanOpen(item), false, wxT("where is our open submenu?") );
+
+    wxPopupMenuWindow *win = item->GetSubMenu()->m_popupMenu;
+    wxCHECK_MSG( win, false, wxT("submenu is opened but not shown?") );
+
+    wxRect popupRect = win->GetScreenRect();
+    wxPoint pt1 = popupRect.GetPosition();
+    pt1.y -= 10;
+    wxPoint pt2 = wxPoint(pt1.x, pt1.y + popupRect.height + 10);
+
+    if (m_subMenuPoint.x >= pt1.x || target.x < m_subMenuPoint.x)
+    {
+        return false;
+    }
+
+    double ox = m_subMenuPoint.x;
+    double oy = m_subMenuPoint.y;
+
+    double d1 = (pt1.y - oy) / (pt1.x - ox);
+    double d2 = (pt2.y - oy) / (pt2.x - ox);
+
+    double y1 = oy + d1 * (target.x - ox);
+    double y2 = oy + d2 * (target.x - ox);
+
+    return target.y >= y1 && target.y <= y2;
+}
+
+
 void wxPopupMenuWindow::ProcessMouseMove(const wxPoint& pt)
 {
+    if (OverflowArrowHitTest(pt))
+    {
+        if (!m_overflowTimer.IsRunning())
+        {
+            m_overflowTimer.StartOnce(OVERFLOW_INITIAL_TIMEOUT);
+        }
+        return;
+    }
+
     wxMenuItemIter node = GetMenuItemFromPoint(pt);
 
     // don't reset current to NULL here, we only do it when the mouse leaves
@@ -761,54 +909,110 @@ void wxPopupMenuWindow::ProcessMouseMove(const wxPoint& pt)
     {
         if ( !m_nodeCurrent || (node != m_nodeCurrent) )
         {
-            ChangeCurrent(node);
-
-            wxMenuItem *item = GetCurrentItem();
-            if ( CanOpen(item) )
+            if (!HasOpenSubmenu())
             {
-                OpenSubmenu(item, WithMouse);
+                ChangeCurrent(node);
+
+                wxMenuItem *item = GetCurrentItem();
+                if ( CanOpen(item) )
+                {
+                    OpenSubmenu(item, WithMouse);
+                }
+            }
+            else
+            {
+                if (!m_subMenuTimer.IsRunning())
+                {
+                    m_subMenuPoint = ClientToScreen(pt);
+                    m_subMenuTimer.StartOnce(SUBMENU_TIMEOUT);
+                }
+                else
+                {
+                    wxPoint screenPt = ClientToScreen(pt);
+
+                    int diff = abs(screenPt.x - m_subMenuPoint.x) + abs(screenPt.y - m_subMenuPoint.y);
+
+                    if (diff >= 10) {
+                        if (!IsPointTrackingToSubMenu(screenPt))
+                        {
+                            m_subMenuTimer.Stop();
+
+                            ChangeCurrent(node);
+
+                            wxMenuItem *item = GetCurrentItem();
+                            if ( CanOpen(item) )
+                            {
+                                OpenSubmenu(item, WithMouse);
+                            }
+                        }
+                        else
+                        {
+                            m_subMenuTimer.StartOnce(SUBMENU_TIMEOUT);
+                        }
+                    } else {
+                        m_subMenuTimer.StartOnce(SUBMENU_TIMEOUT);
+                    }
+                }
             }
         }
         //else: same item, nothing to do
     }
     else // not on an item
     {
-        // the last open submenu forwards the mouse move messages to its
-        // parent, so if the mouse moves to another item of the parent menu,
-        // this menu is closed and this other item is selected - in the similar
-        // manner, the top menu forwards the mouse moves to the menubar which
-        // allows to select another top level menu by just moving the mouse
-
-        // we need to translate our client coords to the client coords of the
-        // window we forward this event to
-        wxPoint ptScreen = ClientToScreen(pt);
-
-        // if the mouse is outside this menu, let the parent one to
-        // process it
-        wxMenu *menuParent = m_menu->GetParent();
-        if ( menuParent )
+        if (HasOpenSubmenu())
         {
-            wxPopupMenuWindow *win = menuParent->m_popupMenu;
-
-            // if we're shown, the parent menu must be also shown
-            wxCHECK_RET( win, wxT("parent menu is not shown?") );
-
-            win->ProcessMouseMove(win->ScreenToClient(ptScreen));
-        }
-        else // no parent menu
-        {
-            wxMenuBar *menubar = m_menu->GetMenuBar();
-            if ( menubar )
+            if (!IsPointTrackingToSubMenu(ClientToScreen(pt))) {
+                ChangeCurrent(wxMenuItemIter());
+            }
+            else
             {
-                if ( menubar->ProcessMouseEvent(
-                            menubar->ScreenToClient(ptScreen)) )
-                {
-                    // menubar has closed this menu and opened another one, probably
-                    return;
-                }
+                m_subMenuTimer.StartOnce(SUBMENU_TIMEOUT);
             }
         }
-        //else: top level popup menu, no other processing to do
+        else if (m_nodeCurrent)
+        {
+            ChangeCurrent(wxMenuItemIter());
+        }
+
+        if (!HasOpenSubmenu())
+        {
+            // the last open submenu forwards the mouse move messages to its
+            // parent, so if the mouse moves to another item of the parent menu,
+            // this menu is closed and this other item is selected - in the similar
+            // manner, the top menu forwards the mouse moves to the menubar which
+            // allows to select another top level menu by just moving the mouse
+
+            // we need to translate our client coords to the client coords of the
+            // window we forward this event to
+            wxPoint ptScreen = ClientToScreen(pt);
+
+            // if the mouse is outside this menu, let the parent one to
+            // process it
+            wxMenu *menuParent = m_menu->GetParent();
+            if ( menuParent )
+            {
+                wxPopupMenuWindow *win = menuParent->m_popupMenu;
+
+                // if we're shown, the parent menu must be also shown
+                wxCHECK_RET( win, wxT("parent menu is not shown?") );
+
+                win->ProcessMouseMove(win->ScreenToClient(ptScreen));
+            }
+            else // no parent menu
+            {
+                wxMenuBar *menubar = m_menu->GetMenuBar();
+                if ( menubar )
+                {
+                    if ( menubar->ProcessMouseEvent(
+                                menubar->ScreenToClient(ptScreen)) )
+                    {
+                        // menubar has closed this menu and opened another one, probably
+                        return;
+                    }
+                }
+            }
+            //else: top level popup menu, no other processing to do
+        }
     }
 }
 
@@ -822,8 +1026,8 @@ void wxPopupMenuWindow::OnMouseLeave(wxMouseEvent& event)
         // we shouldn't change the current them if our submenu is opened and
         // mouse moved there, in this case the submenu is responsable for
         // handling it
-        bool resetCurrent;
-        if ( HasOpenSubmenu() )
+        bool resetCurrent = false;
+        if ( HasOpenSubmenu() && !m_subMenuTimer.IsRunning())
         {
             wxMenuItem *item = GetCurrentItem();
             wxCHECK_RET( CanOpen(item), wxT("where is our open submenu?") );
@@ -831,10 +1035,15 @@ void wxPopupMenuWindow::OnMouseLeave(wxMouseEvent& event)
             wxPopupMenuWindow *win = item->GetSubMenu()->m_popupMenu;
             wxCHECK_RET( win, wxT("submenu is opened but not shown?") );
 
-            // only handle this event if the mouse is not inside the submenu
-            wxPoint pt = ClientToScreen(event.GetPosition());
-            resetCurrent =
-                win->HitTest(win->ScreenToClient(pt)) == wxHT_WINDOW_OUTSIDE;
+            wxMenuItemIter node = GetMenuItemFromPoint(event.GetPosition());
+            if (node && node->GetData() == item) {
+                resetCurrent = false;
+            } else {
+                // only handle this event if the mouse is not inside the submenu
+                wxPoint pt = ClientToScreen(event.GetPosition());
+                resetCurrent =
+                    win->HitTest(win->ScreenToClient(pt)) == wxHT_WINDOW_OUTSIDE;
+            }
         }
         else
         {
@@ -849,6 +1058,25 @@ void wxPopupMenuWindow::OnMouseLeave(wxMouseEvent& event)
     }
 
     event.Skip();
+}
+
+void wxPopupMenuWindow::OnMouseWheel(wxMouseEvent& event)
+{
+  if (GetClientRect().Contains(event.GetPosition()) && HasOverflow())
+  {
+    double rotation = event.GetWheelRotation();
+    double delta = event.GetWheelDelta();
+    int pixels = ceill(10 * rotation / delta * event.GetLinesPerAction());
+
+    if (pixels > 0)
+    {
+        SetOffsetY(wxMin(GetOffsetY() + pixels, 0));
+    }
+    else
+    {
+        SetOffsetY(wxMax(GetOffsetY() + pixels, GetMaxClientHeight() - GetClientSize().y));
+    }
+  }
 }
 
 void wxPopupMenuWindow::OnKeyDown(wxKeyEvent& event)
@@ -1039,6 +1267,58 @@ bool wxPopupMenuWindow::ProcessKeyDown(int key)
     }
 
     return processed;
+}
+
+void wxPopupMenuWindow::OnSubMenuTimer(wxTimerEvent& WXUNUSED(event))
+{
+    wxPoint pt = ScreenToClient(wxGetMousePosition());
+
+    wxMenuItemIter node = GetMenuItemFromPoint(pt);
+
+    if ( node )
+    {
+        if ( !m_nodeCurrent || (node != m_nodeCurrent) )
+        {
+            ChangeCurrent(node);
+
+            wxMenuItem *item = GetCurrentItem();
+            if ( CanOpen(item) )
+            {
+                OpenSubmenu(item, WithMouse);
+            }
+        }
+    }
+    else if ( HasOpenSubmenu() )
+    {
+        wxMenuItem *item = GetCurrentItem();
+        wxCHECK_RET( CanOpen(item), wxT("where is our open submenu?") );
+
+        wxPopupMenuWindow *win = item->GetSubMenu()->m_popupMenu;
+        wxCHECK_RET( win, wxT("submenu is opened but not shown?") );
+
+        if (win->HitTest(win->ScreenToClient(wxGetMousePosition())) == wxHT_WINDOW_OUTSIDE)
+        {
+            ChangeCurrent(wxMenuItemIter());
+        }
+    }
+}
+
+void wxPopupMenuWindow::OnOverflowTimer(wxTimerEvent& WXUNUSED(event))
+{
+    wxPoint pt = ScreenToClient(wxGetMousePosition());
+
+    if (OverflowArrowHitTest(pt))
+    {
+        if (GetOverflowArrowUpRect(m_menu->GetGeometryInfo()).Contains(pt))
+        {
+            SetOffsetY(wxMin(GetOffsetY() + 4, 0));
+        }
+        else
+        {
+            SetOffsetY(wxMax(GetOffsetY() - 4, GetMaxClientHeight() - GetClientSize().y));
+        }
+        m_overflowTimer.StartOnce(OVERFLOW_REPEAT_TIMEOUT);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1285,7 +1565,7 @@ void wxMenu::Detach()
 
 wxWindow *wxMenu::GetRootWindow() const
 {
-    return GetMenuBar() ? GetMenuBar() : GetInvokingWindow();
+    return GetMenuBar() ? GetMenuBar() : GetWindow();
 }
 
 wxRenderer *wxMenu::GetRenderer() const
@@ -1358,6 +1638,7 @@ void wxMenu::OnDismiss(bool dismissParent)
             wxCHECK_RET( win, wxT("what kind of menu is this?") );
 
             win->DismissPopupMenu();
+            //delete this;
         }
     }
 }
@@ -1741,6 +2022,11 @@ void wxMenuBar::Attach(wxFrame *frame)
 
 void wxMenuBar::Detach()
 {
+    if (GetParent())
+    {
+        GetParent()->RemoveChild(this);
+    }
+
     // don't delete the window because we may be reattached later, just hide it
     if ( m_frameLast )
     {
@@ -2102,9 +2388,9 @@ void wxMenuBar::OnKillFocus(wxFocusEvent& event)
 
 void wxMenuBar::OnLeftDown(wxMouseEvent& event)
 {
-    if ( HasCapture() )
+    if ( IsShowingMenu() )
     {
-        OnDismiss();
+        DismissMenu();
 
         event.Skip();
     }
@@ -2544,6 +2830,7 @@ wxEventLoop *wxWindow::ms_evtLoopPopup = NULL;
 
 bool wxWindow::DoPopupMenu(wxMenu *menu, int x, int y)
 {
+#ifndef __WXWASM__
     wxCHECK_MSG( !ms_evtLoopPopup, false,
                  wxT("can't show more than one popup menu at a time") );
 
@@ -2570,8 +2857,11 @@ bool wxWindow::DoPopupMenu(wxMenu *menu, int x, int y)
     Update();
 #endif // 0
 
+#endif // __WXWASM__
+
     menu->Popup(ClientToScreen(wxPoint(x, y)), wxSize(0,0));
 
+#ifndef __WXWASM__
     // this is not very useful if the menu was popped up because of the mouse
     // click but I think it is nice to do when it appears because of a key
     // press (i.e. Windows menu key)
@@ -2595,14 +2885,29 @@ bool wxWindow::DoPopupMenu(wxMenu *menu, int x, int y)
     SetCursor(cursorOld);
 #endif // __WXMSW__
 
+#endif // __WXWASM__
+
     return true;
+}
+
+void wxWindow::DoPopupMenu(wxMenu *menu, int x, int y, std::function<void (bool)> callback)
+{
+    m_popupCallback = callback;
+    menu->Popup(ClientToScreen(wxPoint(x, y)), wxSize(0,0));
 }
 
 void wxWindow::DismissPopupMenu()
 {
+    if (m_popupCallback)
+    {
+        m_popupCallback(true);
+        m_popupCallback = NULL;
+    }
+/*
     wxCHECK_RET( ms_evtLoopPopup, wxT("no popup menu shown") );
 
     ms_evtLoopPopup->Exit();
+*/
 }
 
 #endif // wxUSE_MENUS

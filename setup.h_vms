@@ -697,6 +697,7 @@ typedef pid_t GPid;
 #define wxUSE_THEME_GTK     1
 #define wxUSE_THEME_METAL   1
 #define wxUSE_THEME_MONO    1
+#define wxUSE_THEME_WASM    1
 #define wxUSE_THEME_WIN32   1
 #else
 #define wxUSE_ALL_THEMES    0
@@ -704,6 +705,7 @@ typedef pid_t GPid;
 #define wxUSE_THEME_GTK     0
 #define wxUSE_THEME_METAL   0
 #define wxUSE_THEME_MONO    0
+#define wxUSE_THEME_WASM    0
 #define wxUSE_THEME_WIN32   0
 #endif
 

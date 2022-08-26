@@ -372,7 +372,7 @@ bool wxPopupTransientWindow::Show( bool show )
     }
 #endif
 
-#if defined( __WXMAC__)
+#if defined(__WXMAC__) || defined( __WXWASM__ )
     if (!show && m_child && m_child->HasCapture())
     {
         m_child->ReleaseMouse();
@@ -432,7 +432,7 @@ bool wxPopupTransientWindow::Show( bool show )
     }
 #endif
 
-#if defined( __WXMAC__)
+#if defined(__WXMAC__) || defined(__WXWASM__)
     if (show && m_child)
     {
         // Assume that the mouse is outside the popup to begin with
@@ -577,6 +577,7 @@ void wxPopupWindowHandler::OnLeftDown(wxMouseEvent& event)
                 wxMouseEvent event2(event);
 
                 m_popup->ClientToScreen(&event2.m_x, &event2.m_y);
+                bool sendClickToUnderlying = m_popup->ShouldSendClickToUnderlyingOnDismiss();
 
                 // clicking outside a popup dismisses it
                 m_popup->DismissAndNotify();
@@ -585,7 +586,7 @@ void wxPopupWindowHandler::OnLeftDown(wxMouseEvent& event)
                 // should be able to dismiss it and press the button with the
                 // same click, so repost this event to the window beneath us
                 wxWindow *winUnder = wxFindWindowAtPoint(event2.GetPosition());
-                if ( winUnder )
+                if ( winUnder && sendClickToUnderlying )
                 {
                     // translate the event coords to the ones of the window
                     // which is going to get the event

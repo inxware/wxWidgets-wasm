@@ -737,6 +737,8 @@ COND_TOOLKIT_GTK
 COND_TOOLKIT_DFB_USE_GUI_1
 COND_TOOLKIT_DFB
 COND_TOOLKIT_COCOA
+COND_TOOLKIT_WASM_USE_GUI_1
+COND_TOOLKIT_WASM
 COND_TOOLKIT_
 COND_SHARED_1_USE_GUI_1_USE_OPENGL_1
 COND_SHARED_1_USE_GUI_1
@@ -3852,6 +3854,7 @@ USE_WIN32=0
 USE_DOS=0
 USE_BEOS=0
 USE_MAC=0
+USE_WASM=0
 
 USE_AIX=
 USE_BSD=                            USE_DARWIN=                         USE_FREEBSD=
@@ -3869,7 +3872,7 @@ USE_ALPHA=
 
 NEEDS_D_REENTRANT_FOR_R_FUNCS=0
 
-ALL_TOOLKITS="GTK OSX_COCOA OSX_IPHONE MOTIF MSW X11 DFB QT"
+ALL_TOOLKITS="GTK OSX_COCOA OSX_IPHONE MOTIF MSW X11 DFB QT WASM"
 
 DEFAULT_wxUSE_GTK=0
 DEFAULT_wxUSE_OSX_COCOA=0
@@ -3879,6 +3882,7 @@ DEFAULT_wxUSE_MSW=0
 DEFAULT_wxUSE_X11=0
 DEFAULT_wxUSE_DFB=0
 DEFAULT_wxUSE_QT=0
+DEFAULT_wxUSE_WASM=0
 
 DEFAULT_DEFAULT_wxUSE_GTK=0
 DEFAULT_DEFAULT_wxUSE_OSX_COCOA=0
@@ -3888,6 +3892,7 @@ DEFAULT_DEFAULT_wxUSE_MSW=0
 DEFAULT_DEFAULT_wxUSE_X11=0
 DEFAULT_DEFAULT_wxUSE_DFB=0
 DEFAULT_DEFAULT_wxUSE_QT=0
+DEFAULT_DEFAULT_wxUSE_WASM=0
 
 PROGRAM_EXT=
 SAMPLES_CXXFLAGS=
@@ -4074,6 +4079,15 @@ case "${host}" in
     $as_echo "#define __HAIKU__ 1" >>confdefs.h
 
     DEFAULT_DEFAULT_wxUSE_QT=1
+  ;;
+
+  *-*-emscripten* )
+    USE_WASM=1
+    $as_echo "#define __WASM__ 1" >>confdefs.h
+
+    DEFAULT_DEFAULT_wxUSE_WASM=1
+
+    PROGRAM_EXT=".js"
   ;;
 
   *)
@@ -4563,6 +4577,12 @@ fi
 
 
 
+# Check whether --with-wasm was given.
+if test "${with_wasm+set}" = set; then :
+  withval=$with_wasm; wxUSE_WASM="$withval" CACHE_WASM=1 TOOLKIT_GIVEN=1
+fi
+
+
 # Check whether --with-x11 was given.
 if test "${with_x11+set}" = set; then :
   withval=$with_x11;
@@ -4693,7 +4713,7 @@ if test "$wxUSE_GUI" = "yes"; then
             NUM_TOOLKITS=`expr ${wxUSE_GTK:-0} \
                   + ${wxUSE_OSX_COCOA:-0} + ${wxUSE_OSX_IPHONE:-0} + ${wxUSE_DFB:-0} \
                   + ${wxUSE_MOTIF:-0} + ${wxUSE_MSW:-0} \
-                  + ${wxUSE_X11:-0} + ${wxUSE_QT:-0}`
+                  + ${wxUSE_X11:-0} + ${wxUSE_QT:-0} + ${wxUSE_WASM:-0}`
 
 
     case "$NUM_TOOLKITS" in
@@ -26438,6 +26458,12 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
         TOOLKIT=OSX_IPHONE
     fi
 
+    if test "$wxUSE_WASM" = 1; then
+        TOOLKIT=WASM
+        TOOLKIT_INCLUDE=""
+        GUI_TK_LIBRARY="-lpng"
+        LIBS="$LIBS -lz"
+    fi
 
     if test "$wxUSE_QT" = 1; then
         TOOLKIT=QT
@@ -39643,7 +39669,8 @@ fi
       *-*-sunos4* | \
       *-*-osf* | \
       *-*-dgux5* | \
-      *-*-sysv5* )
+      *-*-sysv5* | \
+      *-*-emscripten )
               ;;
 
       *)

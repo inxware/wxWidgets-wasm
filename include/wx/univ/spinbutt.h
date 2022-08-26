@@ -70,7 +70,7 @@ public:
 protected:
     virtual wxSize DoGetBestClientSize() const wxOVERRIDE;
     virtual void DoDraw(wxControlRenderer *renderer) wxOVERRIDE;
-    virtual wxBorder GetDefaultBorder() const wxOVERRIDE { return wxBORDER_NONE; }
+    virtual wxBorder GetDefaultBorder() const wxOVERRIDE { return wxBORDER_STATIC; }
 
     // the common part of all ctors
     void Init();

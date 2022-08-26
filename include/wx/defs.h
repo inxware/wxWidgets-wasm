@@ -57,6 +57,7 @@
          !defined(__WXDFB__)   && \
          !defined(__WXX11__)   && \
          !defined(__WXQT__)    && \
+         !defined(__WXWASM__)
           wxUSE_GUI
 #       ifdef __UNIX__
 #           error "No Target! You should use wx-config program for compilation flags!"
@@ -2303,7 +2304,7 @@ enum wxKeyCode
     WXK_WINDOWS_LEFT,
     WXK_WINDOWS_RIGHT,
     WXK_WINDOWS_MENU ,
-#ifdef __WXOSX__
+#if defined(__WXOSX__)
     WXK_RAW_CONTROL,
 #else
     WXK_RAW_CONTROL = WXK_CONTROL,
@@ -2361,7 +2362,7 @@ enum wxKeyModifier
     wxMOD_SHIFT     = 0x0004,
     wxMOD_META      = 0x0008,
     wxMOD_WIN       = wxMOD_META,
-#if defined(__WXMAC__)
+#if defined(__WXMAC__) || defined(__WXWASM__)
     wxMOD_RAW_CONTROL = 0x0010,
 #else
     wxMOD_RAW_CONTROL = wxMOD_CONTROL,
@@ -3013,6 +3014,10 @@ typedef const void* WXWidget;
 #ifdef __WXQT__
 #include "wx/qt/defs.h"
 #endif
+
+#ifdef __WXWASM__
+typedef const void *WXWidget;
+#endif /* __WXWASM__ */
 
 /*  include the feature test macros */
 #include "wx/features.h"

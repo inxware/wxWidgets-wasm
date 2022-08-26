@@ -365,6 +365,7 @@ wxWidgets 3.1.3).}
 @itemdef{wxUSE_THEME_GTK, Use GTK+ 1-like theme in wxUniversal}
 @itemdef{wxUSE_THEME_METAL, Use GTK+ 2-like theme in wxUniversal}
 @itemdef{wxUSE_THEME_MONO, Use simple monochrome theme in wxUniversal}
+@itemdef{wxUSE_THEME_WASM, Use WASM theme in wxUniversal}
 @itemdef{wxUSE_THEME_WIN32, Use Win32-like theme in wxUniversal}
 @endDefList
 

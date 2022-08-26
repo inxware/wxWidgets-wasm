@@ -121,6 +121,17 @@ void wxRadioButton::ChangeValue(bool value)
     }
 }
 
+void wxRadioButton::Toggle() {
+    if (Get3StateValue() == wxCHK_CHECKED)
+    {
+        Release();
+    }
+    else
+    {
+        wxCheckBox::Toggle();
+    }
+}
+
 void wxRadioButton::ClearValue()
 {
     if ( IsChecked() )
@@ -140,6 +151,26 @@ void wxRadioButton::SendEvent()
 // ----------------------------------------------------------------------------
 // overridden wxCheckBox methods
 // ----------------------------------------------------------------------------
+
+bool wxRadioButton::PerformAction(const wxControlAction& action,
+                                  long numArg,
+                                  const wxString& strArg)
+{
+    if ( action == wxACTION_BUTTON_PRESS )
+        Press();
+    else if ( action == wxACTION_BUTTON_RELEASE )
+        Release();
+    if ( action == wxACTION_CHECKBOX_CHECK )
+        ChangeValue(true);
+    else if ( action == wxACTION_CHECKBOX_CLEAR )
+        ChangeValue(false);
+    else if ( action == wxACTION_CHECKBOX_TOGGLE )
+        Toggle();
+    else
+        return wxControl::PerformAction(action, numArg, strArg);
+
+    return true;
+}
 
 wxSize wxRadioButton::GetBitmapSize() const
 {
@@ -161,7 +192,7 @@ void wxRadioButton::DoDraw(wxControlRenderer *renderer)
 
     renderer->GetRenderer()->
         DrawRadioButton(dc,
-                        GetLabel(),
+                        GetLabelText(),
                         GetBitmap(GetState(flags), status),
                         renderer->GetRect(),
                         flags,

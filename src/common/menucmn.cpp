@@ -659,7 +659,7 @@ bool wxMenuBase::DoProcessEvent(wxMenuBase* menu, wxEvent& event, wxWindow* win)
 
     // Process event in the menu itself and all its parent menus, if it's a
     // submenu, first.
-    for ( ; menu; menu = menu->GetParent() )
+    while (menu)
     {
         wxEvtHandler *handler = menu->GetEventHandler();
         if ( handler )
@@ -670,6 +670,8 @@ bool wxMenuBase::DoProcessEvent(wxMenuBase* menu, wxEvent& event, wxWindow* win)
             // below if we do have the associated window.
             if ( win || mb )
                 event.SetWillBeProcessedAgain();
+
+            menu = menu->GetParent();
 
             if ( handler->SafelyProcessEvent(event) )
                 return true;

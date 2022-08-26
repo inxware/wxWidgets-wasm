@@ -260,7 +260,7 @@ wxRendererGeneric* wxRendererGeneric::sm_rendererGeneric = NULL;
 
 wxRendererGeneric::wxRendererGeneric()
     : m_penBlack(wxSystemSettings::GetColour(wxSYS_COLOUR_3DDKSHADOW)),
-      m_penDarkGrey(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)),
+      m_penDarkGrey(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)),
       m_penLightGrey(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE)),
       m_penHighlight(wxSystemSettings::GetColour(wxSYS_COLOUR_3DHIGHLIGHT))
 {
@@ -315,10 +315,11 @@ wxRendererGeneric::DrawHeaderButton(wxWindow* win,
 
     dc.SetBrush(*wxTRANSPARENT_BRUSH);
 
-    dc.SetPen(m_penBlack);
+    dc.SetPen(m_penDarkGrey);
     dc.DrawLine( x+w-1, y, x+w-1, y+h );  // right (outer)
     dc.DrawLine( x, y+h-1, x+w, y+h-1 );  // bottom (outer)
 
+/*
     dc.SetPen(m_penDarkGrey);
     dc.DrawLine( x+w-2, y+1, x+w-2, y+h-1 );  // right (inner)
     dc.DrawLine( x+1, y+h-2, x+w-1, y+h-2 );  // bottom (inner)
@@ -326,6 +327,7 @@ wxRendererGeneric::DrawHeaderButton(wxWindow* win,
     dc.SetPen(m_penHighlight);
     dc.DrawLine( x, y, x, y+h-1 ); // left (outer)
     dc.DrawLine( x, y, x+w-1, y ); // top (outer)
+*/
 
     return DrawHeaderButtonContents(win, dc, rect, flags, sortArrow, params);
 }
@@ -814,7 +816,7 @@ wxRendererGeneric::DrawItemSelectionRect(wxWindow * WXUNUSED(win),
         }
         else // !focused
         {
-            brush = wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW));
+            brush = wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
         }
     }
     else // !selected
@@ -826,7 +828,8 @@ wxRendererGeneric::DrawItemSelectionRect(wxWindow * WXUNUSED(win),
     bool drawFocusRect = (flags & wxCONTROL_CURRENT) && (flags & wxCONTROL_FOCUSED);
 
     if ( drawFocusRect && !(flags & wxCONTROL_CELL) )
-        dc.SetPen( *wxBLACK_PEN );
+        dc.SetPen(*wxTRANSPARENT_PEN);
+        //dc.SetPen( *wxBLACK_PEN );
     else
         dc.SetPen( *wxTRANSPARENT_PEN );
 

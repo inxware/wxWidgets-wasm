@@ -52,6 +52,8 @@ public:
                 const wxValidator& validator = wxDefaultValidator,
                 const wxString& name = wxASCII_STR(wxChoiceNameStr));
 
+    virtual int GetCurrentSelection() const { return GetSelection(); }
+
 private:
     void OnComboBox(wxCommandEvent &event);
 
