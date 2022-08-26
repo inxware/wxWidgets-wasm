@@ -1,6 +1,8 @@
 About
 -----
 
+wxWidgets-wasm is a WebAssembly port of wxWidgets.
+
 wxWidgets is a free and open source cross-platform C++ framework
 for writing advanced GUI applications using native controls.
 
@@ -16,29 +18,6 @@ You can learn more about wxWidgets at https://www.wxwidgets.org/
 and read its documentation online at https://docs.wxwidgets.org/
 
 
-Platforms
----------
-
-[![AppVeyor](https://img.shields.io/appveyor/build/wxWidgets/wxWidgets?label=AppVeyor&logo=appveyor)](https://ci.appveyor.com/project/wxWidgets/wxwidgets)
-[![Travis](https://img.shields.io/travis/wxWidgets/wxWidgets?label=TravisCI&logo=travis)](https://travis-ci.org/wxWidgets/wxWidgets)
-[![Github](https://img.shields.io/github/checks-status/wxWidgets/wxWidgets/master?label=GitHub&logo=github)](https://github.com/wxWidgets/wxWidgets/actions)
-[![OSS-Fuzz](https://oss-fuzz-build-logs.storage.googleapis.com/badges/wxwidgets.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:wxwidgets)
-
-This version of wxWidgets supports the following primary platforms:
-
-- Windows XP, Vista, 7, 8 and 10 (32/64 bits).
-- Most Unix variants using the GTK+ toolkit (version 2.6 or newer or 3.x).
-- macOS (10.10 or newer) using Cocoa under both amd64 and ARM platforms.
-
-Most popular C++ compilers are supported including but not limited to:
-
-- Microsoft Visual C++ 2003 or later (up to 2019).
-- g++ 4 or later, including MinGW/MinGW-64/TDM under Windows.
-- Clang under macOS and Linux.
-- Intel icc compiler.
-- Oracle (ex-Sun) CC.
-
-
 Licence
 -------
 
@@ -46,17 +25,40 @@ Licence
 is a modified version of LGPL explicitly allowing not distributing the sources
 of an application using the library even in the case of static linking.
 
+WASM sources are released under the LGPL v2 licence.
+
 
 Building
 --------
 
-For building the library, please see platform-specific documentation under
-`docs/<port>` directory, e.g. here are the instructions for
-[wxGTK](docs/gtk/install.md), [wxMSW](docs/msw/install.md) and
-[wxOSX](docs/osx/install.md).
+git submodule update --init src/jpeg
+git submodule update --init 3rdparty/catch
 
-If you're building the sources checked out from Git, and not from a released
-version, please see these additional [Git-specific notes](README-GIT.md).
+export CFLAGS=-I$EMSCRIPTEN/system/local/include
+export CXXFLAGS=-I$EMSCRIPTEN/system/local/include
+export LDFLAGS=-L$EMSCRIPTEN/system/local/lib -sERROR_ON_UNDEFINED_SYMBOLS=0
+
+export CONFIGURE_ARGS="
+  --host=emscripten \
+  --with-cxx=14 \
+  --enable-utf8 \
+  --enable-universal \
+  --disable-shared \
+  --disable-exceptions \
+  --disable-richtext \
+  --without-libtiff \
+  --disable-xlocale"
+
+$EMSCRIPTEN/emconfigure $SOURCE_DIR/configure $CONFIGURE_ARGS
+$EMSCRIPTEN/emmake make
+
+
+Example Apps
+------------
+
+- [Life Demo](https://life.dj.app/)
+- [Transitions DJ](https://dj.app/)
+- [Wavvy Audio Editor](https://wavvy.app/)
 
 
 Further information
