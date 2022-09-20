@@ -62,7 +62,7 @@ Example Apps
 
 - [Life Demo](https://life.dj.app/)
 - [Transitions DJ](https://dj.app/)
-- [Wavvy Audio Editor](https://wavvy.app/)
+- [Wavacity Audio Editor](https://wavacity.com/)
 
 
 Further information
