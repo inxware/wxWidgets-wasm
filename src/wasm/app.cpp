@@ -220,7 +220,6 @@ void wxApp::HandleMouseEvent(wxMouseEvent *event)
     else
     {
         wxPoint mousePosition = event->GetPosition();
-        //printf("HandleMouseEvent\n"w);
 
         UpdateMouseState(*event);
 
@@ -263,7 +262,8 @@ void wxApp::HandleMouseEvent(wxMouseEvent *event)
                 SendMouseEventToWindow(event, g_mouseWindow);
             }
 
-            if (g_mouseWindow == GetMouseWindow(mousePosition) &&
+            if (g_mouseWindow != NULL &&
+                g_mouseWindow == GetMouseWindow(mousePosition) &&
                 (eventType == wxEVT_LEFT_DOWN ||
                  eventType == wxEVT_RIGHT_DOWN ||
                  eventType == wxEVT_MIDDLE_DOWN))
