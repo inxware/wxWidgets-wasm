@@ -91,7 +91,14 @@ public:
         m_nativeFontInfo.SetFaceName(info.GetFaceName());
         m_nativeFontInfo.SetFamily(info.GetFamily());
         // TODO: support font size in pixels
-        m_nativeFontInfo.SetFractionalPointSize(info.GetFractionalPointSize());
+        if (info.IsUsingSizeInPixels())
+        {
+          m_nativeFontInfo.SetFractionalPointSize(info.GetPixelSize().y);
+        }
+        else
+        {
+          m_nativeFontInfo.SetFractionalPointSize(info.GetFractionalPointSize());
+        }
         m_nativeFontInfo.SetStyle(info.GetStyle());
         m_nativeFontInfo.SetWeight(info.GetWeight());
         m_nativeFontInfo.SetUnderlined(info.IsUnderlined());
