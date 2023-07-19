@@ -10,6 +10,7 @@
 
 #include "wx/app.h"
 #include "wx/evtloop.h"
+#include "wx/toplevel.h"
 
 #include <emscripten.h>
 
@@ -84,6 +85,20 @@ void wxGUIEventLoop::DoYieldFor(long eventsToProcess)
 int wxGUIEventLoop::DoRun()
 {
     wxASSERT_MSG(IsOk(), wxT("invalid event loop"));
+
+    if (!wxTopLevelWindows.empty())
+    {
+        wxWindow *topWindow = wxTopLevelWindows.front();
+
+        int width = EM_ASM_INT({
+            return window.innerWidth;
+        });
+        int height = EM_ASM_INT({
+            return window.innerHeight - mainWindow.offsetTop;
+        });
+        topWindow->SetSize(0, 0, width, height);
+        topWindow->Refresh();
+    }
 
     // Simulates an infinite loop by throwing an exception to prevent
     // execution from continuing after this function call.

@@ -58,16 +58,6 @@ bool wxNonOwnedWindow::Create(wxWindow *parent,
     int width = WidthDefault(size.x);
     int height = HeightDefault(size.y);
 
-    if (wxTopLevelWindows.IsEmpty())
-    {
-        width = EM_ASM_INT({
-            return window.innerWidth;
-        });
-        height = EM_ASM_INT({
-            return window.innerHeight - mainWindow.offsetTop;
-        });
-    }
-
     if (!wxNonOwnedWindowBase::Create(parent, id, wxPoint(x, y), wxSize(width, height), style, name))
     {
         wxFAIL_MSG(wxT("wxTopLevelWindowWasm creation failed"));
