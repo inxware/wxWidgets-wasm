@@ -143,6 +143,8 @@ char* wxSetlocale(int category, const char *locale)
     }
     else
         rv = setlocale(category, locale);
+#elif __WXWASM__
+    char *rv = NULL;
 #else
     char *rv = setlocale(category, locale);
 #endif
