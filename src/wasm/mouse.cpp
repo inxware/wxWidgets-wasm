@@ -110,39 +110,52 @@ wxEventType GetMouseEventType(int emscriptenEventType,
     return eventType;
 }
 
-void SetKeyboardState(const EmscriptenMouseEvent& emscriptenEvent,
+void SetKeyboardState(bool ctrlKey,
+                      bool shiftKey,
+                      bool altKey,
+                      bool metaKey,
                       wxMouseEvent *event)
 {
     if ((wxGetOsVersion() & wxOS_MAC) != 0)
     {
-        event->SetControlDown(emscriptenEvent.metaKey);
+        event->SetControlDown(metaKey);
         event->SetMetaDown(false);
     }
     else
     {
-        event->SetControlDown(emscriptenEvent.ctrlKey);
-        event->SetMetaDown(emscriptenEvent.metaKey);
+        event->SetControlDown(ctrlKey);
+        event->SetMetaDown(metaKey);
     }
-    event->SetShiftDown(emscriptenEvent.shiftKey);
-    event->SetAltDown(emscriptenEvent.altKey);
-    event->SetRawControlDown(emscriptenEvent.ctrlKey);
+    event->SetShiftDown(shiftKey);
+    event->SetAltDown(altKey);
+    event->SetRawControlDown(ctrlKey);
 }
 
-void SetMouseState(const EmscriptenMouseEvent& emscriptenEvent, wxMouseState *event)
+void SetMouseState(long targetX,
+                   long targetY,
+                   unsigned short buttons,
+                   wxMouseState *event)
 {
-    event->SetX(emscriptenEvent.targetX);
-    event->SetY(emscriptenEvent.targetY);
-    event->SetLeftDown((emscriptenEvent.buttons & 1) != 0);
-    event->SetRightDown((emscriptenEvent.buttons & 2) != 0);
-    event->SetMiddleDown((emscriptenEvent.buttons & 4) != 0);
+    event->SetX(targetX);
+    event->SetY(targetY);
+    event->SetLeftDown((buttons & 1) != 0);
+    event->SetRightDown((buttons & 2) != 0);
+    event->SetMiddleDown((buttons & 4) != 0);
     event->SetAux1Down(false);
     event->SetAux2Down(false);
 }
 
 void InitMouseEventCommon(const EmscriptenMouseEvent& emscriptenEvent, wxMouseEvent *event)
 {
-    SetKeyboardState(emscriptenEvent, event);
-    SetMouseState(emscriptenEvent, event);
+    SetKeyboardState(emscriptenEvent.ctrlKey,
+                     emscriptenEvent.shiftKey,
+                     emscriptenEvent.altKey,
+                     emscriptenEvent.metaKey,
+                     event);
+    SetMouseState(emscriptenEvent.targetX,
+                  emscriptenEvent.targetY,
+                  emscriptenEvent.buttons,
+                  event);
 }
 
 } // anonymous namespace
@@ -210,4 +223,90 @@ bool EmscriptenMouseEventToWXEvent(int emscriptenEventType,
     //        mouseEvent->LeftIsDown(), mouseEvent->RightIsDown());
 
     return true;
+}
+
+bool EmscriptenTouchEventToWXEvent(int touchEventType,
+                                   const EmscriptenTouchEvent &touchEvent,
+                                   wxMouseEvent *mouseEvent)
+{
+    static bool hasTouch = false;
+    static long firstTouchId = 0;
+
+    wxEventType eventType = wxEVT_NULL;
+    unsigned short buttons;
+    int clickCount;
+    int touchIndex;
+
+    if (touchEventType == EMSCRIPTEN_EVENT_TOUCHSTART)
+    {
+        if (!hasTouch && touchEvent.numTouches == 1)
+        {
+            hasTouch = true;
+            firstTouchId = touchEvent.touches[0].identifier;
+
+            eventType = wxEVT_LEFT_DOWN;
+            buttons = 1;
+            clickCount = 1;
+            touchIndex = 0;
+        }
+    }
+    else if (touchEventType == EMSCRIPTEN_EVENT_TOUCHEND ||
+             touchEventType == EMSCRIPTEN_EVENT_TOUCHCANCEL)
+    {
+        if (hasTouch)
+        {
+            for (int i = 0; i < touchEvent.numTouches; i++)
+            {
+                if (firstTouchId == touchEvent.touches[i].identifier &&
+                    (touchEvent.touches[i].isChanged ||
+                     touchEventType == EMSCRIPTEN_EVENT_TOUCHCANCEL))
+                {
+                    hasTouch = false;
+
+                    eventType = wxEVT_LEFT_UP;
+                    buttons = 0;
+                    clickCount = 1;
+                    touchIndex = i;
+                }
+            }
+        }
+    }
+    else if (touchEventType == EMSCRIPTEN_EVENT_TOUCHMOVE)
+    {
+        if (hasTouch)
+        {
+            for (int i = 0; i < touchEvent.numTouches; i++)
+            {
+                if (firstTouchId == touchEvent.touches[i].identifier &&
+                    touchEvent.touches[i].isChanged)
+                {
+                    eventType = wxEVT_MOTION;
+                    buttons = 1;
+                    clickCount = 0;
+                    touchIndex = i;
+                }
+            }
+        }
+    }
+
+    if (eventType != wxEVT_NULL)
+    {
+        mouseEvent->SetEventType(eventType);
+        mouseEvent->m_clickCount = clickCount;
+
+        SetKeyboardState(touchEvent.ctrlKey,
+                         touchEvent.shiftKey,
+                         touchEvent.altKey,
+                         touchEvent.metaKey,
+                         mouseEvent);
+        SetMouseState(touchEvent.touches[touchIndex].targetX,
+                      touchEvent.touches[touchIndex].targetY,
+                      buttons,
+                      mouseEvent);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

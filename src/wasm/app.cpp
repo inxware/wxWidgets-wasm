@@ -433,6 +433,18 @@ const char *GetEventName(int eventType)
         case EMSCRIPTEN_EVENT_MOUSELEAVE:
             return "mouseleave";
             break;
+        case EMSCRIPTEN_EVENT_TOUCHSTART:
+            return "touchstart";
+            break;
+        case EMSCRIPTEN_EVENT_TOUCHEND:
+            return "touchend";
+            break;
+        case EMSCRIPTEN_EVENT_TOUCHMOVE:
+            return "touchmove";
+            break;
+        case EMSCRIPTEN_EVENT_TOUCHCANCEL:
+            return "touchcancel";
+            break;
         default:
             break;
     }
@@ -511,6 +523,36 @@ EM_BOOL MouseCallback(int eventType,
     }
 
     return true;
+}
+
+EM_BOOL TouchCallback(int eventType,
+                      const EmscriptenTouchEvent *emscriptenEvent,
+                      void *userData)
+{
+    //const char *eventName = GetEventName(eventType);
+    //printf("TouchCallback: %s %d %ld %ld\n", eventName, emscriptenEvent->numTouches, emscriptenEvent->touches[0].targetX, emscriptenEvent->touches[0].targetY);
+
+    wxApp* app = static_cast<wxApp*>(userData);
+    wxMouseEvent event;
+
+    if (EmscriptenTouchEventToWXEvent(eventType, *emscriptenEvent, &event))
+    {
+        if (event.GetEventType() == wxEVT_LEFT_DOWN)
+        {
+            // Mirroring browser behavior, move the mouse to the new location
+            // before sending the mouse down event.
+            wxMouseEvent moveEvent(event);
+            moveEvent.SetEventType(wxEVT_MOTION);
+            moveEvent.SetLeftDown(false);
+            moveEvent.m_clickCount = 0;
+            app->HandleMouseEvent(&moveEvent);
+
+        }
+        app->HandleMouseEvent(&event);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 EM_BOOL WheelCallback(int WXUNUSED(eventType),
@@ -615,6 +657,18 @@ void RegisterEmscriptenCallbacks(wxApp* app)
     wxASSERT(result == EMSCRIPTEN_RESULT_SUCCESS);
 
     result = emscripten_set_wheel_callback("#canvas", app, false, WheelCallback);
+    wxASSERT(result == EMSCRIPTEN_RESULT_SUCCESS);
+
+    result = emscripten_set_touchstart_callback("#canvas", app, false, TouchCallback);
+    wxASSERT(result == EMSCRIPTEN_RESULT_SUCCESS);
+
+    result = emscripten_set_touchend_callback("#canvas", app, false, TouchCallback);
+    wxASSERT(result == EMSCRIPTEN_RESULT_SUCCESS);
+
+    result = emscripten_set_touchmove_callback("#canvas", app, false, TouchCallback);
+    wxASSERT(result == EMSCRIPTEN_RESULT_SUCCESS);
+
+    result = emscripten_set_touchcancel_callback("#canvas", app, false, TouchCallback);
     wxASSERT(result == EMSCRIPTEN_RESULT_SUCCESS);
 
     result = emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, app, false, ResizeCallback);
