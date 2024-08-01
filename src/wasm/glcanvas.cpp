@@ -92,6 +92,10 @@ bool wxGLCanvas::Create(wxWindow *parent,
     if ( !InitVisual(dispAttrs) )
         return false;
 
+    // @TODO - this may have to be moved where window is ready for paint. 
+    if( ! CreateSurface() )
+        return false;
+
     return true;
 }
 
