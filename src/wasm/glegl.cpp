@@ -42,6 +42,9 @@ wxGLContextAttrs& wxGLContextAttrs::CoreProfile()
     return *this;
 }
 
+//#error ("XXXXXXXX")
+
+
 wxGLContextAttrs& wxGLContextAttrs::MajorVersion(int val)
 {
     if ( val > 0 )
@@ -363,24 +366,145 @@ EGLDisplay wxGLCanvasEGL::GetDisplay()
     return eglGetDisplay(EGL_DEFAULT_DISPLAY);
 }
 
+//#error "XXXX"
+
+// bool wxGLCanvasEGL::CreateSurface()
+// {
+   
+//     EGLint attrib_list[] = {
+//         EGL_RED_SIZE, 8,
+//         EGL_GREEN_SIZE, 8,
+//         EGL_BLUE_SIZE, 8,
+//         EGL_ALPHA_SIZE, EGL_DONT_CARE,
+//         EGL_DEPTH_SIZE, EGL_DONT_CARE,
+//         EGL_STENCIL_SIZE, EGL_DONT_CARE,
+//         EGL_SAMPLE_BUFFERS, 0,
+//         EGL_NONE
+//         };
+
+//     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+//     EGLint num_configs;
+//     EGLint major_version;
+//     EGLint minor_version;
+//     EGLConfig config;
+   
+//     m_display = GetDisplay();
+//     EGLint eglError = eglGetError();
+//     if ( m_display == EGL_NO_DISPLAY || eglError != EGL_SUCCESS )
+//     {   
+//         wxFAIL_MSG( wxString("Unable to get EGL Display error no:") << eglError );
+//         return false;
+//     }
+//     else {
+//         wxASSERT_MSG( false, wxString("EGL Display created") << eglError );
+//     }
+
+//    //#error "LLLLL"
+
+//     eglInitialize(m_display, &major_version, &minor_version);
+//     eglError = eglGetError();
+//     // wxFAIL_MSG( wxString("eglInitialize completed")<< eglError);
+//     if ( eglError != EGL_SUCCESS )
+//     {
+//         wxFAIL_MSG( wxString("Unable to initialize EGL error no:") << eglError );
+//         return false;
+//     }
+//     eglGetConfigs(m_display, NULL, 0, &num_configs);// EGL_TRUE);
+//         if ( eglError != EGL_SUCCESS )
+//     {
+//         wxFAIL_MSG( wxString("Unable to configure EGL error no:") << eglError );
+//         return false;
+//     }
+
+//     // wxFAIL_MSG( wxString("eglGetConfigs completed"));
+//     eglChooseConfig(m_display, attrib_list, &config, 1, &num_configs);
+//         if ( eglError != EGL_SUCCESS )
+//     {
+//         wxFAIL_MSG( wxString("Unable to choose configure EGL error no:") << eglError );
+//         return false;
+//     }
+//     // wxFAIL_MSG( wxString("eglChooseConfig completed"));
+
+
+//     // Simply skip window creation because the handle is ignored by Emscripten.
+//     //EGLNativeWindowType dummyWindow = EGL_NO_NATIVE_WINDOW;
+//     //m_surface = eglCreateWindowSurface(m_display, m_config, dummyWindow, NULL);
+//     m_surface = eglCreatePlatformWindowSurface(m_display, m_config, NULL, NULL);
+//      // m_surface = eglCreateWindowSurface(m_display, m_config, dummyWindow, NULL);
+
+//     eglError = eglGetError();
+
+//     if ( m_surface == EGL_NO_SURFACE || eglError != EGL_SUCCESS )
+//     {
+//         wxFAIL_MSG( wxString("Unable to create EGL surface error no:") << eglError );
+//         return false;
+//     }
+
+//     m_readyToDraw = true;
+
+//     return true;
+// }
 bool wxGLCanvasEGL::CreateSurface()
 {
+    EGLint attrib_list[] = {
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, EGL_DONT_CARE,
+        EGL_DEPTH_SIZE, EGL_DONT_CARE,
+        EGL_STENCIL_SIZE, EGL_DONT_CARE,
+        EGL_SAMPLE_BUFFERS, 0,
+        EGL_NONE
+    };
+
+    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+    EGLint num_configs;
+    EGLint major_version;
+    EGLint minor_version;
+    EGLConfig config;
+
     m_display = GetDisplay();
     EGLint eglError = eglGetError();
-    if ( m_display == EGL_NO_DISPLAY || eglError != EGL_SUCCESS )
+    if (m_display == EGL_NO_DISPLAY || eglError != EGL_SUCCESS)
     {
-        wxFAIL_MSG( wxString("Unable to get EGL Display error no:") << eglError );
+        wxFAIL_MSG(wxString("Unable to get EGL Display, error no: ") << eglError);
         return false;
     }
-    // Simply skip window creation because the handle is ignored by Emscripten.
-    EGLNativeWindowType dummyWindow;
-    m_surface = eglCreateWindowSurface(m_display, m_config, dummyWindow, NULL);
+    else
+    {
+        wxASSERT_MSG(false, wxString("EGL Display created successfully"));
+    }
 
+    if (!eglInitialize(m_display, &major_version, &minor_version))
+    {
+        eglError = eglGetError();
+        wxFAIL_MSG(wxString("Unable to initialize EGL, error no: ") << eglError);
+        return false;
+    }
+
+    if (!eglGetConfigs(m_display, NULL, 0, &num_configs))
+    {
+        eglError = eglGetError();
+        wxFAIL_MSG(wxString("Unable to get EGL configurations, error no: ") << eglError);
+        return false;
+    }
+
+    if (!eglChooseConfig(m_display, attrib_list, &config, 1, &num_configs))
+    {
+        eglError = eglGetError();
+        wxFAIL_MSG(wxString("Unable to choose EGL configuration, error no: ") << eglError);
+        return false;
+    }
+
+    // Use NULL for window parameter as this is common in WebGL/WebAssembly environments
+    m_surface = eglCreateWindowSurface(m_display, config, NULL, NULL);
     eglError = eglGetError();
 
-    if ( m_surface == EGL_NO_SURFACE || eglError != EGL_SUCCESS )
+    if (m_surface == EGL_NO_SURFACE || eglError != EGL_SUCCESS)
     {
-        wxFAIL_MSG( wxString("Unable to create EGL surface error no:") << eglError );
+        wxFAIL_MSG(wxString("Unable to create EGL surface, error no: ") << eglError);
         return false;
     }
 

@@ -1,7 +1,10 @@
 WASM_ARCH ?= wasm32
 ARCH = $(WASM_ARCH)
 CONFIG ?= Release
-EMSCRIPTEN := $(HOME)/emsdk/$(EMSCRIPTEN_VERSION)-$(ARCH)/emscripten
+#EMSCRIPTEN := $(HOME)/emsdk/$(EMSCRIPTEN_VERSION)-$(ARCH)/emscripten
+
+EMSCRIPTEN := $(HOME)/experiment/emsdk/upstream/emscripten
+
 
 HOST_CC ?= clang
 HOST_CFLAGS ?= -W

@@ -1,0 +1,3 @@
+wasm32-unknown-emscripten-install_name_tool ${changes} ${2}/wxrc-3.1
+wasm32-unknown-emscripten-install_name_tool ${changes} ${2}/wxrc-3.1
+wasm32-unknown-emscripten-install_name_tool ${changes} ${2}/wxrc-3.1

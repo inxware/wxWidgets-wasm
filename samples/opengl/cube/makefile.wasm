@@ -10,8 +10,14 @@ SOURCES=cube_gles.cpp
 EXTRA_INC_PATHS=-I.
 CXXFLAGS=$(WX_CXXFLAGS)
 
-LIBS=
-LDFLAGS=-sTOTAL_MEMORY=64MB -sFULL_ES3=1 -sUSE_WEBGL2=1 -sWASM=1 $(WX_LDFLAGS)
+
+
+WX_LDFLAGS += -L/home/aybike/experiment/build_deps/libexpat/expat/build
+WX_LDFLAGS += -L/home/aybike/experiment/build_deps/libpng/build/
+
+
+LIBS= 
+LDFLAGS=-sTOTAL_MEMORY=64MB -sFULL_ES3=1 -sUSE_WEBGL2=1 -sWASM=1 $(WX_LDFLAGS) 
 
 JS=$(TOOLS_ROOT)/wx.js
 HTML=$(TOOLS_ROOT)/template.html

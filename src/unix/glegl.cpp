@@ -43,6 +43,8 @@
 // ----------------------------------------------------------------------------
 // EGL specific values
 
+#error "We shouldn't be running this - it's for linux targets not WASM"
+
 wxGLContextAttrs& wxGLContextAttrs::CoreProfile()
 {
     AddAttribBits(EGL_CONTEXT_OPENGL_PROFILE_MASK,
